@@ -19,6 +19,7 @@ const RoomList = () => {
   return (
     
     <div>
+      <button onClick={() => navigate("/profile")}>Go to Profile</button>
       <h2>Available Rooms</h2>
       <h3>Add new room  
       <button onClick={() => navigate("/admin")}>Go to Admin</button></h3>
