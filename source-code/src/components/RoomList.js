@@ -23,8 +23,12 @@ const RoomList = () => {
       <h3>Add new room  
       <button onClick={() => navigate("/admin")}>Go to Admin</button></h3>
       <ul>
-        {rooms.map((room) => (
-          <li key={room.id}>{room.name} - ${room.price}/month</li>
+      {rooms.map((room) => (
+          <li key={room.id}>
+            <strong>{room.name}</strong> - ${room.price}/month "Near {room.location}"  
+            <br />
+            <small>Posted by {room.adminName || "Unknown"}</small>
+          </li>
         ))}
       </ul>
     </div>

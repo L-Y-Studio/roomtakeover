@@ -1,27 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { db, auth, signInWithGoogle } from "../firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, query, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-
 import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
+  const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
   const [user, setUser] = useState(null);
 
-  const navigate = useNavigate(); // Hook to navigate between pages
-  // Check if user is signed in when entering the page
+  const navigate = useNavigate();
+
+  // Fetch room listings
   useEffect(() => {
-    onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
-        signInWithGoogle(); // Trigger login popup
-      }
-      setUser(currentUser);
+    const q = query(collection(db, "rooms"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
+    return () => unsubscribe();
   }, []);
 
+  // Check user authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -39,9 +49,10 @@ const AdminPage = () => {
       await addDoc(collection(db, "rooms"), {
         name: roomName,
         price: parseFloat(price),
-        location: location,
+        location,
         createdAt: new Date(),
-        userId: user.uid, // Store user ID for reference
+        userId: user.uid, // Store admin's user ID
+        adminName: user.displayName, // Store admin's name
       });
 
       alert("Room added successfully!");
@@ -58,6 +69,7 @@ const AdminPage = () => {
     <div>
       <h2>Admin - Add a Room</h2>
       <button onClick={() => navigate("/")}>Go to Room Listing</button>
+
       {user ? (
         <>
           <p>Signed in as {user.displayName}</p>
@@ -85,8 +97,22 @@ const AdminPage = () => {
           </form>
         </>
       ) : (
-        <p>Loading sign-in...</p>
+        <>
+          <p>You are not signed in.</p>
+          <button onClick={signInWithGoogle}>Sign In with Google</button>
+        </>
       )}
+
+      <h3>Room Listings</h3>
+      <ul>
+        {rooms.map((room) => (
+          <li key={room.id}>
+            <strong>{room.name}</strong> - ${room.price}/month "Near {room.location}"  
+            <br />
+            <small>Posted by {room.adminName || "Unknown"}</small>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
