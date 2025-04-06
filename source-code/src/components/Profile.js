@@ -11,9 +11,7 @@ const Profile = () => {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
-        signInWithGoogle(); // Trigger login popup if not signed in
-      }
+      
       setUser(currentUser);
       if (currentUser) {
         fetchUserRooms(currentUser.uid);
@@ -53,8 +51,13 @@ const Profile = () => {
           )}
         </>
       ) : (
-        <p>Loading user info...</p>
-      )}
+              <>
+                <p>You are not signed in.</p>
+                <button onClick={signInWithGoogle}>Sign In with Google</button>
+              </>
+            )}
+            <br></br>
+            <br></br>
       <button onClick={() => navigate("/")}>Go to Room Listing</button>
     </div>
   );
