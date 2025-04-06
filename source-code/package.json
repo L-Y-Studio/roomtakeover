@@ -2,7 +2,7 @@
   "name": "source-code",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://l-y-studio.github.io/roomtakeover"
+  "homepage": "https://l-y-studio.github.io/roomtakeover/"
 ,
   "dependencies": {
     "@react-google-maps/api": "^2.20.6",
