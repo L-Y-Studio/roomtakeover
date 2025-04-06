@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/roomtakeover/static/css/main.e6c13ad2.css",
+    "main.js": "/roomtakeover/static/js/main.11484c90.js",
+    "static/js/453.686eca62.chunk.js": "/roomtakeover/static/js/453.686eca62.chunk.js",
+    "index.html": "/roomtakeover/index.html",
+    "main.e6c13ad2.css.map": "/roomtakeover/static/css/main.e6c13ad2.css.map",
+    "main.11484c90.js.map": "/roomtakeover/static/js/main.11484c90.js.map",
+    "453.686eca62.chunk.js.map": "/roomtakeover/static/js/453.686eca62.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.11484c90.js"
+  ]
+}
