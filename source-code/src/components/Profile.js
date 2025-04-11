@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { db, auth, signInWithGoogle } from "../firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import "./RoomList.css";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [rooms, setRooms] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -37,18 +36,27 @@ const Profile = () => {
         <>
           <p>Name: {user.displayName}</p>
           <button onClick={() => signOut(auth)}>Sign Out</button>
+
+          <div className="room-list">
           <h3>Your Posted Rooms:</h3>
+
           {rooms.length > 0 ? (
-            <ul>
+            <ul className="room-list-ul">
               {rooms.map((room) => (
-                <li key={room.id}>
-                  {room.name} - ${room.price}/month - {room.location}
-                </li>
-              ))}
+          <div key={room.id}>
+            <strong>{room.name}</strong>
+            <br></br>$ {room.price}/month 
+            <br></br>Location - {room.location}
+            <br />
+            <small>Posted by {room.adminName || "Unknown"}</small>
+          </div>
+        ))}
             </ul>
           ) : (
             <p>No rooms posted yet.</p>
+            
           )}
+          </div>
         </>
       ) : (
               <>
@@ -56,9 +64,6 @@ const Profile = () => {
                 <button onClick={signInWithGoogle}>Sign In with Google</button>
               </>
             )}
-            <br></br>
-            <br></br>
-      <button onClick={() => navigate("/")}>Go to Room Listing</button>
     </div>
   );
 };

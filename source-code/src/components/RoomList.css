@@ -1,0 +1,13 @@
+.room-list{
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.room-list-ul{
+    padding: 1rem;
+    gap: 2rem;
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));    
+    /* grid-template-rows: repeat(3, 1fr); */
+}
+

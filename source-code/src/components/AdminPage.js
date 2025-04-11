@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { db, auth, signInWithGoogle } from "../firebase";
-import { collection, addDoc, query, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, query, onSnapshot, deleteDoc, doc  } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
   const [rooms, setRooms] = useState([]);
@@ -11,7 +10,6 @@ const AdminPage = () => {
   const [location, setLocation] = useState("");
   const [user, setUser] = useState(null);
 
-  const navigate = useNavigate();
 
   // Fetch room listings
   useEffect(() => {
@@ -31,6 +29,20 @@ const AdminPage = () => {
     return () => unsubscribe();
   }, []);
 
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this room?");
+    if (!confirmDelete) return;
+  
+    try {
+      await deleteDoc(doc(db, "rooms", id));
+      alert("Room deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      alert("Failed to delete room.");
+    }
+  };
+
+  
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,8 +79,7 @@ const AdminPage = () => {
 
   return (
     <div>
-      <h2>Admin - Add a Room</h2>
-      <button onClick={() => navigate("/")}>Go to Room Listing</button>
+      <h2>Admin</h2>
 
       {user ? (
         <>
@@ -103,16 +114,26 @@ const AdminPage = () => {
         </>
       )}
 
-      <h3>Room Listings</h3>
-      <ul>
-        {rooms.map((room) => (
-          <li key={room.id}>
-            <strong>{room.name}</strong> - ${room.price}/month "Near {room.location}"  
+
+<div className="room-list">
+      <h2>All Rooms Listed</h2>
+      
+      <ul className="room-list-ul">
+      {rooms.map((room) => (
+          <div key={room.id}>
+            <strong>{room.name}</strong>
+            <br></br>$ {room.price}/month 
+            <br></br>Location - {room.location}
             <br />
             <small>Posted by {room.adminName || "Unknown"}</small>
-          </li>
+            <br></br>
+            <button onClick={() => handleDelete(room.id)}>Delete Room</button>
+
+          </div>
         ))}
       </ul>
+      </div>
+
     </div>
   );
 };
