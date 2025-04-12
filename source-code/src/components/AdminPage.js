@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { db, auth, signInWithGoogle } from "../firebase";
 import { collection, addDoc, query, onSnapshot, deleteDoc, doc  } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import './AdminPage.css';
 
 const AdminPage = () => {
   const [rooms, setRooms] = useState([]);
@@ -121,11 +122,11 @@ const AdminPage = () => {
       <ul className="room-list-ul">
       {rooms.map((room) => (
           <div key={room.id}>
-            <strong>{room.name}</strong>
-            <br></br>$ {room.price}/month 
-            <br></br>Location - {room.location}
+            <h3>{room.name}</h3>
+            <br></br><strong>$</strong> {room.price}/month 
+            <br></br><strong>Location</strong> - {room.location}
             <br />
-            <small>Posted by {room.adminName || "Unknown"}</small>
+            <small><strong>Posted by</strong> {room.adminName || "Unknown"}</small>
             <br></br>
             <button onClick={() => handleDelete(room.id)}>Delete Room</button>
 
