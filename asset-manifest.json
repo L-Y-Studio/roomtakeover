@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/roomtakeover/static/css/main.39ac7af6.css",
-    "main.js": "/roomtakeover/static/js/main.12397bf8.js",
+    "main.css": "/roomtakeover/static/css/main.e6c13ad2.css",
+    "main.js": "/roomtakeover/static/js/main.23304dcf.js",
     "static/js/453.686eca62.chunk.js": "/roomtakeover/static/js/453.686eca62.chunk.js",
     "index.html": "/roomtakeover/index.html",
-    "main.39ac7af6.css.map": "/roomtakeover/static/css/main.39ac7af6.css.map",
-    "main.12397bf8.js.map": "/roomtakeover/static/js/main.12397bf8.js.map",
+    "main.e6c13ad2.css.map": "/roomtakeover/static/css/main.e6c13ad2.css.map",
+    "main.23304dcf.js.map": "/roomtakeover/static/js/main.23304dcf.js.map",
     "453.686eca62.chunk.js.map": "/roomtakeover/static/js/453.686eca62.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.39ac7af6.css",
-    "static/js/main.12397bf8.js"
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.23304dcf.js"
   ]
 }
