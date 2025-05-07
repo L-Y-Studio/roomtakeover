@@ -1,272 +1,108 @@
-import React, { useState, useEffect } from "react";
-import { db, auth, signInWithGoogle } from "../firebase";
+
+import React, { useEffect, useState } from "react";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
+import { db } from "../firebase";
 import {
   collection,
-  addDoc,
   query,
+  where,
   onSnapshot,
+  updateDoc,
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   Container,
   Typography,
-  TextField,
-  Button,
+  Grid,
   Card,
   CardContent,
+  Button,
   Box,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Stack,
 } from "@mui/material";
-import GoogleIcon from "@mui/icons-material/Google";
-import LogoutIcon from "@mui/icons-material/Logout";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const AdminPage = () => {
-  const [rooms, setRooms] = useState([]);
-  const [roomName, setRoomName] = useState("");
-  const [price, setPrice] = useState("");
-  const [location, setLocation] = useState("");
+  const [pendingRooms, setPendingRooms] = useState([]);
+  const [users, setusers] = useState([]);
   const [user, setUser] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  useEffect(() => {
-    const q = query(collection(db, "rooms"));
+
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser);
+  });
+  return () => unsubscribe();
+}, []);
+
+  
+  useEffect(() => {    
+  const q = query(collection(db, "users"));
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setusers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const q = query(collection(db, "rooms"), where("status", "==", "pending"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setPendingRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteDoc(doc(db, "rooms", id));
-      setDeleteDialogOpen(false);
-    } catch (error) {
-      console.error("Error deleting room:", error);
-    }
+  const handleApprove = async (id) => {
+    const roomRef = doc(db, "rooms", id);
+    await updateDoc(roomRef, { status: "approved" });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!user) {
-      alert("You must be signed in to add rooms.");
-      return;
-    }
-
-    if (!roomName || !price || !location) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "rooms"), {
-        name: roomName,
-        price: parseFloat(price),
-        location,
-        createdAt: new Date(),
-        userId: user.uid,
-        adminName: user.displayName,
-      });
-
-      alert("Room added successfully!");
-      setRoomName("");
-      setPrice("");
-      setLocation("");
-    } catch (error) {
-      console.error("Error adding room:", error);
-      alert("Failed to add room.");
-    }
+  const handleReject = async (id) => {
+    const roomRef = doc(db, "rooms", id);
+    await deleteDoc(roomRef); // Or update status to "rejected" instead
   };
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography
-        variant="h4"
-        component="h2"
-        gutterBottom
-        align="center"
-        sx={{ mb: 4 }}
-      >
-        Admin Dashboard
+      
+      {users
+  .filter((u) => u.uid === user?.uid)
+  .map((u) => (
+    <Card key={u.uid}><CardContent>Role : {u.role}<br></br>Name : {u.name}</CardContent></Card>
+  ))}
+      <br></br>
+      <Typography variant="h4" gutterBottom>
+        Pending Room Approvals
       </Typography>
-
-      {user ? (
-        <Box sx={{ mb: 4, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-          <Typography variant="h6" gutterBottom>
-            Welcome, {user.displayName}
-          </Typography>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<LogoutIcon />}
-            onClick={() => signOut(auth)}
-          >
-            Sign Out
-          </Button>
-    
-          <Box sx={{ mt:5, mb: 4, maxWidth: 400, width: "100%" }}>
-              <Typography variant="h6" gutterBottom>
-                Add New Room
-              </Typography>
-              <form onSubmit={handleSubmit}>
-                <Stack spacing={3}>
-                  <TextField
-                    fullWidth
-                    label="Room Name"
-                    value={roomName}
-                    onChange={(e) => setRoomName(e.target.value)}
-                    required
-                  />
-                  <TextField
-                    fullWidth
-                    label="Price"
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                    InputProps={{
-                      startAdornment: <AttachMoneyIcon color="action" />,
-                    }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                    InputProps={{
-                      startAdornment: <LocationOnIcon color="action" />,
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                  >
-                    Add Room
-                  </Button>
-                </Stack>
-              </form>
-           </Box>
-        </Box>
-      ) : (
-        <Box sx={{ textAlign: "center", mb: 4}}>
-          <Typography variant="body1" gutterBottom>
-            You are not signed in.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<GoogleIcon />}
-            onClick={signInWithGoogle}
-          >
-            Sign In with Google
-          </Button>
-        </Box>
-      )}
-
-      <Typography variant="h5" gutterBottom sx={{ mb: 3}}>
-        All Rooms Listed
-      </Typography>
-
       <Grid container spacing={3}>
-        {rooms.map((room) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
-            <Card
-            sx={{
-              width: 270,
-              height: 270,
-              backgroundColor: "background.default",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              transition: "all 0.3s ease",
-              '&:hover': {
-                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            <CardContent sx={{ flexGrow: 1 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2,}}>
-                <Typography variant="h6" color="primary" sx={{ fontWeight: 550 }}>
-                  {room.name}
-                </Typography>
-
-                <IconButton
-                  color="error"
-                  onClick={() => {
-                    setSelectedRoom(room);
-                    setDeleteDialogOpen(true);
-                  }}
-                >
-                 <DeleteIcon />
-                </IconButton>
-              </Box>
-
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                ${room.price}/month
-              </Typography>
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ whiteSpace: "normal", wordBreak: "break-word", lineHeight: 1.5,}}
-              >
-                {room.location}
-              </Typography>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2,}}>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: "auto", fontStyle: "italic" }}>
-                  Posted by {room.adminName || "Unknown"}
-                </Typography>
-              </Box>
-            </CardContent>
+        {pendingRooms.map((room) => (
+          <Grid item xs={12} sm={6} md={4} key={room.id}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">{room.name}</Typography>
+                <Typography>${room.price}/month</Typography>
+                <Typography>{room.location}</Typography>
+                <Typography>Requested by: {room.adminName}</Typography>
+                <Typography>Status: {room.status}</Typography>
+                <Typography>Created At: {room.createdAt.toDate().toLocaleString()}</Typography>
+                
+                <Box sx={{ mt: 2 }}>
+                  <Button onClick={() => handleApprove(room.id)} color="success">
+                    Approve
+                  </Button>
+                  <Button onClick={() => handleReject(room.id)} color="error" sx={{ ml: 2 }}>
+                    Reject
+                  </Button>
+                </Box>
+              </CardContent>
             </Card>
-
           </Grid>
         ))}
       </Grid>
-
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Room</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete "{selectedRoom?.name}"?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={() => handleDelete(selectedRoom?.id)}
-            color="error"
-            variant="contained"
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 };
