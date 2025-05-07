@@ -27,9 +27,6 @@ const AdminPage = () => {
   const [pendingRooms, setPendingRooms] = useState([]);
   const [users, setusers] = useState([]);
   const [user, setUser] = useState(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState(null);
-
 
 useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
