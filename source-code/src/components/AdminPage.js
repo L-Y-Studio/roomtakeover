@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -26,6 +27,9 @@ const AdminPage = () => {
   const [pendingRooms, setPendingRooms] = useState([]);
   const [users, setusers] = useState([]);
   const [user, setUser] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+
 
 useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -37,19 +41,18 @@ useEffect(() => {
   
   useEffect(() => {    
   const q = query(collection(db, "users"));
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setusers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
   }, []);
 
-  // Check user authentication state
   useEffect(() => {
     const q = query(collection(db, "rooms"), where("status", "==", "pending"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPendingRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
-
     return () => unsubscribe();
   }, []);
 

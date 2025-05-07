@@ -34,7 +34,7 @@ const Profile = () => {
       }
     });
 
-    return () => unsubscribeAuth(); // cleanup auth listener
+    return () => unsubscribeAuth(); 
   }, []);
 
   const fetchUserRooms = (userId) => {
