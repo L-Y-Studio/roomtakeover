@@ -1,141 +1,106 @@
-import React, { useState, useEffect } from "react";
-import { db, auth, signInWithGoogle } from "../firebase";
-import { collection, addDoc, query, onSnapshot, deleteDoc, doc  } from "firebase/firestore";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import './AdminPage.css';
+import React, { useEffect, useState } from "react";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
+import { db } from "../firebase";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Box,
+} from "@mui/material";
 
 const AdminPage = () => {
-  const [rooms, setRooms] = useState([]);
-  const [roomName, setRoomName] = useState("");
-  const [price, setPrice] = useState("");
-  const [location, setLocation] = useState("");
+  const [pendingRooms, setPendingRooms] = useState([]);
+  const [users, setusers] = useState([]);
   const [user, setUser] = useState(null);
 
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser);
+  });
+  return () => unsubscribe();
+}, []);
 
-  // Fetch room listings
-  useEffect(() => {
-    const q = query(collection(db, "rooms"));
+  
+  useEffect(() => {    
+  const q = query(collection(db, "users"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setusers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
   }, []);
 
   // Check user authentication state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const q = query(collection(db, "rooms"), where("status", "==", "pending"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setPendingRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this room?");
-    if (!confirmDelete) return;
-  
-    try {
-      await deleteDoc(doc(db, "rooms", id));
-      alert("Room deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting room:", error);
-      alert("Failed to delete room.");
-    }
+  const handleApprove = async (id) => {
+    const roomRef = doc(db, "rooms", id);
+    await updateDoc(roomRef, { status: "approved" });
   };
 
-  
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!user) {
-      alert("You must be signed in to add rooms.");
-      return;
-    }
-
-    if (!roomName || !price || !location) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "rooms"), {
-        name: roomName,
-        price: parseFloat(price),
-        location,
-        createdAt: new Date(),
-        userId: user.uid, // Store admin's user ID
-        adminName: user.displayName, // Store admin's name
-      });
-
-      alert("Room added successfully!");
-      setRoomName("");
-      setPrice("");
-      setLocation("");
-    } catch (error) {
-      console.error("Error adding room:", error);
-      alert("Failed to add room.");
-    }
+  const handleReject = async (id) => {
+    const roomRef = doc(db, "rooms", id);
+    await deleteDoc(roomRef); // Or update status to "rejected" instead
   };
 
   return (
-    <div>
-      <h2>Admin</h2>
-
-      {user ? (
-        <>
-          <p>Signed in as {user.displayName}</p>
-          <button onClick={() => signOut(auth)}>Sign Out</button>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Room Name"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-            <button type="submit">Add Room</button>
-          </form>
-        </>
-      ) : (
-        <>
-          <p>You are not signed in.</p>
-          <button onClick={signInWithGoogle}>Sign In with Google</button>
-        </>
-      )}
-
-
-<div className="room-list">
-      <h2>All Rooms Listed</h2>
+    <Container sx={{ py: 4 }}>
       
-      <ul className="room-list-ul">
-      {rooms.map((room) => (
-          <div key={room.id}>
-            <h3>{room.name}</h3>
-            <br></br><strong>$</strong> {room.price}/month 
-            <br></br><strong>Location</strong> - {room.location}
-            <br />
-            <small><strong>Posted by</strong> {room.adminName || "Unknown"}</small>
-            <br></br>
-            <button onClick={() => handleDelete(room.id)}>Delete Room</button>
-
-          </div>
+      {users
+  .filter((u) => u.uid === user?.uid)
+  .map((u) => (
+    <Card key={u.uid}><CardContent>Role : {u.role}<br></br>Name : {u.name}</CardContent></Card>
+  ))}
+      <br></br>
+      <Typography variant="h4" gutterBottom>
+        Pending Room Approvals
+      </Typography>
+      <Grid container spacing={3}>
+        {pendingRooms.map((room) => (
+          <Grid item xs={12} sm={6} md={4} key={room.id}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">{room.name}</Typography>
+                <Typography>${room.price}/month</Typography>
+                <Typography>{room.location}</Typography>
+                <Typography>Requested by: {room.adminName}</Typography>
+                <Typography>Status: {room.status}</Typography>
+                <Typography>Created At: {room.createdAt.toDate().toLocaleString()}</Typography>
+                
+                <Box sx={{ mt: 2 }}>
+                  <Button onClick={() => handleApprove(room.id)} color="success">
+                    Approve
+                  </Button>
+                  <Button onClick={() => handleReject(room.id)} color="error" sx={{ ml: 2 }}>
+                    Reject
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      </ul>
-      </div>
-
-    </div>
+      </Grid>
+    </Container>
   );
 };
 

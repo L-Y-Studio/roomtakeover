@@ -1,25 +1,58 @@
-
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import "./Navbar.css"; // Assuming you have a CSS file for styling
-
+import { useNavigate, useLocation } from "react-router-dom";
+import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const navigate = useNavigate(); // Hook to navigate between pages
+  const navItems = [
+    { label: "Profile", path: "/profile" },
+    { label: "Find Rooms", path: "/" },
+    { label: "Rent Rooms", path: "/rent" },
+    { label: "Admin", path: "/admin" },
+  ];
 
-    return (
-        
-        <div className="header">
-            <button className="button" onClick={() => navigate("/profile")}>View Profile</button>
+  return (
+    <AppBar position="static" sx={{ backgroundColor: "#223843" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ fontWeight: "bold", cursor: "pointer" }}
+          onClick={() => navigate("/")}
+        >
+          RoomFinder
+        </Typography>
 
-            <button className="button" onClick={() => navigate("/")}>Find Rooms</button>
-      
-            <button className="button" onClick={() => navigate("/admin")}>Rent your Rooms</button>
-      
-            <button className="button" onClick={() => navigate("/admin")}>Admin</button>
-        </div>
-    );
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Button
+                key={item.path}
+                color="inherit"
+                onClick={() => navigate(item.path)}
+                sx={(theme) => ({
+                  borderBottom: isActive
+                    ? `2px solid ${theme.palette.secondary.main}`
+                    : "none",
+                  borderRadius: 0,
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  },
+                })}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
 };
 
 export default Navbar;
