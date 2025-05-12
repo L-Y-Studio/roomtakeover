@@ -1,11 +1,16 @@
-import { HashRouter as Router, Route, Routes } from "react-router-dom"
-import { ThemeProvider, createTheme } from "@mui/material/styles"
-import CssBaseline from "@mui/material/CssBaseline"
-import RoomList from "./components/RoomList"
-import AdminPage from "./components/AdminPage"
-import Profile from "./components/Profile"
-import Messages from "./components/Messages"
-import Navbar from "./components/Navbar"
+
+import React from "react";
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import RoomList from "./components/RoomList";
+import AdminPage from "./components/AdminPage";
+import Profile from "./components/Profile";
+import Messages from "./components/Messages";
+import Navbar from "./components/Navbar";
+import AdminRoomApproval from "./components/AdminRoomApproval";
+import RentRoom from "./components/RentRoom";
+
 
 const theme = createTheme({
   palette: {
@@ -39,12 +44,14 @@ function App() {
       <CssBaseline />
       <Router>
         <Navbar />
-        <Routes>
-          <Route path="/" element={<RoomList />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/profile" element={<Profile />} />
+
+          <Routes>
+            <Route path="/" element={<RoomList />} />
+            <Route path="/admin" element={<AdminRoomApproval />} />
+            <Route path="/rent" element={<RentRoom />} />
+            <Route path="/profile" element={<Profile />} />
           <Route path="/messages" element={<Messages />} />
-        </Routes>
+          </Routes>
       </Router>
     </ThemeProvider>
   )

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom"
 import {
   Container,
   Typography,
+  Box,
   Card,
   CardContent,
   Box,
@@ -19,6 +20,7 @@ import {
 import MessageIcon from "@mui/icons-material/Message"
 import { getOrCreateConversation } from "../utils/chatUtils"
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([])
@@ -83,7 +85,6 @@ const RoomList = () => {
       <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
         Available Rooms around ABAC
       </Typography>
-
       <Box
         sx={{
           display: "flex",
@@ -91,7 +92,7 @@ const RoomList = () => {
           gap: 3,
         }}
       >
-        {rooms.map((room) => (
+        {rooms.filter((room) => room.status === "approved").map((room) => (
           <Card
             key={room.id}
             sx={{
@@ -165,5 +166,6 @@ const RoomList = () => {
     </Container>
   )
 }
+
 
 export default RoomList

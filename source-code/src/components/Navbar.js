@@ -9,9 +9,10 @@ const Navbar = () => {
   const navItems = [
     { label: "Profile", path: "/profile" },
     { label: "Find Rooms", path: "/" },
-    { label: "Rent Rooms", path: "/admin" },
+    { label: "Rent Rooms", path: "/rent" },
+    { label: "Admin", path: "/admin" },
     { label: "Messages", path: "/messages" },
-  ]
+  ];
 
   return (
     <AppBar position="static" sx={{ backgroundColor: "#223843" }}>
