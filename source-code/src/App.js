@@ -1,10 +1,7 @@
-
-import React from "react";
 import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import RoomList from "./components/RoomList";
-import AdminPage from "./components/AdminPage";
 import Profile from "./components/Profile";
 import Messages from "./components/Messages";
 import Navbar from "./components/Navbar";
