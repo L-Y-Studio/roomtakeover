@@ -1,16 +1,17 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material";
+"use client"
+import { useNavigate, useLocation } from "react-router-dom"
+import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material"
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const navItems = [
     { label: "Profile", path: "/profile" },
     { label: "Find Rooms", path: "/" },
     { label: "Rent Rooms", path: "/rent" },
     { label: "Admin", path: "/admin" },
+    { label: "Messages", path: "/messages" },
   ];
 
   return (
@@ -27,16 +28,14 @@ const Navbar = () => {
 
         <Box sx={{ display: "flex", gap: 2 }}>
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path
             return (
               <Button
                 key={item.path}
                 color="inherit"
                 onClick={() => navigate(item.path)}
                 sx={(theme) => ({
-                  borderBottom: isActive
-                    ? `2px solid ${theme.palette.secondary.main}`
-                    : "none",
+                  borderBottom: isActive ? `2px solid ${theme.palette.secondary.main}` : "none",
                   borderRadius: 0,
                   textTransform: "none",
                   fontSize: "1rem",
@@ -47,12 +46,12 @@ const Navbar = () => {
               >
                 {item.label}
               </Button>
-            );
+            )
           })}
         </Box>
       </Toolbar>
     </AppBar>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar
