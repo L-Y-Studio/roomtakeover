@@ -1,35 +1,88 @@
-import { db } from "../firebase";
-import { collection, query, onSnapshot } from "firebase/firestore";
-import { useState, useEffect } from "react";
-import React from "react";
+"use client"
+
+import { db, auth } from "../firebase"
+import { collection, query, onSnapshot } from "firebase/firestore"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   Container,
   Typography,
   Box,
   Card,
   CardContent,
-} from "@mui/material";
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material"
+import MessageIcon from "@mui/icons-material/Message"
+import { getOrCreateConversation } from "../utils/chatUtils"
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+
 
 const RoomList = () => {
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState([])
+  const [user, setUser] = useState(null)
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+  const [selectedRoom, setSelectedRoom] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    const q = query(collection(db, "rooms"));
+    const q = query(collection(db, "rooms"))
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => unsubscribe();
-  }, []);
+      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
+    })
+
+    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+    })
+
+    return () => {
+      unsubscribe()
+      authUnsubscribe()
+    }
+  }, [])
+
+  const handleMessageClick = async (room) => {
+    if (!user) {
+      setSelectedRoom(room)
+      setLoginDialogOpen(true)
+      return
+    }
+
+    if (user.uid === room.userId) {
+      alert("You cannot message yourself!")
+      return
+    }
+
+    try {
+      await getOrCreateConversation(room.userId, room.adminName)
+      navigate("/messages")
+    } catch (error) {
+      console.error("Error starting conversation:", error)
+      alert("Failed to start conversation. Please try again.")
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      setLoginDialogOpen(false)
+
+      if (selectedRoom) {
+        handleMessageClick(selectedRoom)
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+    }
+  }
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography
-        variant="h4"
-        component="h2"
-        gutterBottom
-        align="center"
-        sx={{ mb: 4 }}
-      >
+      <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
         Available Rooms around ABAC
       </Typography>
       <Box
@@ -41,65 +94,78 @@ const RoomList = () => {
       >
         {rooms.filter((room) => room.status === "approved").map((room) => (
           <Card
-          key={room.id}
-          sx={{
-            width: 270,
-            height: 250,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            backgroundColor: "background.default",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            transition: "all 0.3s ease",
-            '&:hover': {
-              boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-              transform: "translateY(-4px)",
-            },
-            p: 2
-          }}
-        >
-          <CardContent sx={{ p: 0 }}>
-            <Typography
-              variant="h6"
-              component="h3"
-              gutterBottom
+            key={room.id}
+            sx={{
+              width: 270,
+              height: 280,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              backgroundColor: "background.default",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                transform: "translateY(-4px)",
+              },
+              p: 2,
+            }}
+          >
+            <CardContent sx={{ p: 0 }}>
+              <Typography variant="h6" component="h3" gutterBottom color="primary" sx={{ fontWeight: 600, mb: 2 }}>
+                {room.name}
+              </Typography>
+
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                ${room.price}/month
+              </Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: 2,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  lineHeight: 1.5,
+                }}
+              >
+                {room.location}
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary" sx={{ mt: "auto", fontStyle: "italic" }}>
+                Posted by {room.adminName || "Unknown"}
+              </Typography>
+            </CardContent>
+
+            <Button
+              variant="outlined"
               color="primary"
-              sx={{ fontWeight: 600, mb: 2 }}
+              startIcon={<MessageIcon />}
+              onClick={() => handleMessageClick(room)}
+              fullWidth
             >
-              {room.name}
-            </Typography>
-        
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              ${room.price}/month
-            </Typography>
-        
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                mb: 2,
-                whiteSpace: "normal",
-                wordBreak: "break-word",
-                lineHeight: 1.5,
-              }}
-            >
-              {room.location}
-            </Typography>
-        
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: "auto", fontStyle: "italic" }}
-            >
-              Posted by {room.adminName || "Unknown"}
-            </Typography>
-          </CardContent>
-        </Card>
-        
+              Message
+            </Button>
+          </Card>
         ))}
-        </Box></Container>
+      </Box>
 
-  );
-};
+      <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
+        <DialogTitle>Sign In Required</DialogTitle>
+        <DialogContent>
+          <Typography>You need to sign in to message room owners.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLoginDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleLogin} variant="contained" color="primary">
+            Sign In with Google
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  )
+}
 
-export default RoomList;
+
+export default RoomList
