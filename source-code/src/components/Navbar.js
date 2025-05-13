@@ -1,18 +1,18 @@
 "use client"
 import { useNavigate, useLocation } from "react-router-dom"
-import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material"
+import { AppBar, Toolbar, Button, Typography, Box, Badge } from "@mui/material"
+import { useNotifications } from "../context/NotificationContext"
 
 const Navbar = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { unreadCount = 0 } = useNotifications() || {}
 
   const navItems = [
     { label: "Profile", path: "/profile" },
     { label: "Find Rooms", path: "/" },
-    { label: "Rent Rooms", path: "/rent" },
-    { label: "Admin", path: "/admin" },
-    { label: "Messages", path: "/messages" },
-  ];
+    { label: "Rent Rooms", path: "/admin" },
+  ]
 
   return (
     <AppBar position="static" sx={{ backgroundColor: "#223843" }}>
@@ -48,6 +48,24 @@ const Navbar = () => {
               </Button>
             )
           })}
+
+          <Button
+            color="inherit"
+            onClick={() => navigate("/messages")}
+            sx={(theme) => ({
+              borderBottom: location.pathname === "/messages" ? `2px solid ${theme.palette.secondary.main}` : "none",
+              borderRadius: 0,
+              textTransform: "none",
+              fontSize: "1rem",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            })}
+          >
+            <Badge badgeContent={unreadCount} color="error" sx={{ mr: 1 }}>
+              Messages
+            </Badge>
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>

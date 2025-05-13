@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { db, auth } from "../firebase"
-import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore"
+import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, doc,} from "firebase/firestore"
 import { Container, Typography, TextField, Button, Box, Paper, Avatar, Divider, CircularProgress } from "@mui/material"
 import SendIcon from "@mui/icons-material/Send"
 
@@ -30,10 +30,29 @@ const Chat = ({ conversationId, recipientId, recipientName }) => {
       setMessages(messageData)
       setLoading(false)
       scrollToBottom()
+
+      // Mark messages as read when they are viewed
+      markMessagesAsRead(snapshot.docs)
     })
 
     return () => unsubscribe()
   }, [conversationId, currentUser])
+
+  const markMessagesAsRead = async (messageDocs) => {
+    if (!currentUser) return
+
+    // Find messages that are for the current user and are unread
+    const unreadMessages = messageDocs.filter(
+      (doc) => doc.data().recipientId === currentUser.uid && doc.data().read === false,
+    )
+
+    // Update each unread message to be marked as read
+    for (const messageDoc of unreadMessages) {
+      await updateDoc(doc(db, "messages", messageDoc.id), {
+        read: true,
+      })
+    }
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -45,6 +64,7 @@ const Chat = ({ conversationId, recipientId, recipientName }) => {
     if (!newMessage.trim() || !currentUser || !conversationId) return
 
     try {
+      // Add the new message
       await addDoc(collection(db, "messages"), {
         text: newMessage,
         senderId: currentUser.uid,
@@ -52,6 +72,14 @@ const Chat = ({ conversationId, recipientId, recipientName }) => {
         recipientId: recipientId,
         conversationId: conversationId,
         timestamp: serverTimestamp(),
+        read: false,
+      })
+
+      // Update the conversation's last message
+      const conversationRef = doc(db, "conversations", conversationId)
+      await updateDoc(conversationRef, {
+        lastMessage: newMessage,
+        lastMessageTime: serverTimestamp(),
       })
 
       setNewMessage("")

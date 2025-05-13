@@ -7,6 +7,7 @@ import Messages from "./components/Messages";
 import Navbar from "./components/Navbar";
 import AdminRoomApproval from "./components/AdminRoomApproval";
 import RentRoom from "./components/RentRoom";
+import { NotificationProvider } from "./context/NotificationContext"; 
 
 
 const theme = createTheme({
@@ -37,6 +38,8 @@ const theme = createTheme({
 
 function App() {
   return (
+    <NotificationProvider>
+      
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
@@ -51,6 +54,7 @@ function App() {
           </Routes>
       </Router>
     </ThemeProvider>
+    </NotificationProvider>
   )
 }
 
