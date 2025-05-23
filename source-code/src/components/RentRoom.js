@@ -87,8 +87,7 @@ const RentRoom = () => {
 
     return publicUrlData.publicUrl;
   };
-
-  const handleDelete = async (id) => {
+    const handleDelete = async (id) => {
     try {
       await deleteDoc(doc(db, "rooms", id));
       setDeleteDialogOpen(false);
@@ -103,29 +102,37 @@ const RentRoom = () => {
       alert("You must be signed in to add rooms.");
       return;
     }
-    if (!roomName || !price || !location || !imageUrl || !description) {
-      alert("Please fill all fields");
+    if (!roomName || !price || !location || (!imageFile && !imageUrl) || !description) {
+      alert("Please fill all fields (including either image upload or URL)");
       return;
     }
+
     try {
-      const imageUrl = await uploadImageToSupabase();
+      let finalImageUrl = imageUrl;
+
+      if (imageFile) {
+        const uploadedUrl = await uploadImageToSupabase();
+        finalImageUrl = uploadedUrl || imageUrl;
+      }
 
       await addDoc(collection(db, "rooms"), {
         name: roomName,
         price: parseFloat(price),
         location,
-        imageUrl: imageUrl || "",
+        imageUrl: finalImageUrl,
         description,
         createdAt: new Date(),
         userId: user.uid,
         adminName: user.displayName,
         status: "pending",
       });
+
       alert("Room added successfully!");
       setRoomName("");
       setPrice("");
       setLocation("");
       setImageFile(null);
+      setImageUrl("");
       setDescription("");
     } catch (error) {
       console.error("Error adding room:", error);
@@ -133,14 +140,19 @@ const RentRoom = () => {
     }
   };
 
-
   const handleEditSave = async () => {
     try {
+      let finalImageUrl = imageUrl;
+      if (imageFile) {
+        const uploadedUrl = await uploadImageToSupabase();
+        finalImageUrl = uploadedUrl || imageUrl;
+      }
+
       await updateDoc(doc(db, "rooms", roomToEdit.id), {
         name: roomName,
         price: parseFloat(price),
         location,
-        imageUrl,
+        imageUrl: finalImageUrl,
         description,
       });
       setEditDialogOpen(false);
@@ -150,7 +162,7 @@ const RentRoom = () => {
   };
 
   if (loadingAuth) return <div>Loading user...</div>;
-  if (!user)
+  if (!user) {
     return (
       <Container sx={{ py: 4 }}>
         <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -172,78 +184,26 @@ const RentRoom = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography
-        variant="h4"
-        component="h2"
-        gutterBottom
-        align="center"
-        sx={{ mb: 4 }}
-      >
-        Rent Your Room
-      </Typography>
+      <Typography variant="h4" align="center" gutterBottom>Rent Your Room</Typography>
 
       <Box sx={{ mb: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Typography variant="h6" gutterBottom>
-          Welcome, {user.displayName}
-        </Typography>
-        <Button
-          variant="outlined"
-          color="primary"
-          startIcon={<LogoutIcon />}
-          onClick={() => signOut(auth)}
-        >
+        <Typography variant="h6">Welcome, {user.displayName}</Typography>
+        <Button variant="outlined" startIcon={<LogoutIcon />} onClick={() => signOut(auth)}>
           Sign Out
         </Button>
 
         <Box sx={{ mt: 5, mb: 4, maxWidth: 400, width: "100%" }}>
-          <Typography variant="h6" gutterBottom>
-            Add New Room
-          </Typography>
+          <Typography variant="h6">Add New Room</Typography>
           <form onSubmit={handleSubmit}>
             <Stack spacing={3}>
-              <TextField
-                fullWidth
-                label="Room Name"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                required
-              />
-              <TextField
-                fullWidth
-                label="Price"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-                InputProps={{
-                  startAdornment: <AttachMoneyIcon color="action" />,
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required
-                InputProps={{
-                  startAdornment: <LocationOnIcon color="action" />,
-                }}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files[0])}
-              />
-              {imageFile && (
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="preview"
-                  style={{ width: "100%", maxHeight: 200, objectFit: "cover" }}
-                />
-              )}
-              <Button type="submit" variant="contained" color="primary" size="large">
-                Add Room
-              </Button>
+              <TextField label="Condo Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} required />
+              <TextField label="Price" type="number" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} required InputProps={{ startAdornment: <AttachMoneyIcon color="action" /> }} />
+              <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} required InputProps={{ startAdornment: <LocationOnIcon color="action" /> }} />
+              <TextField label="Image URL (optional if uploading)" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
+              {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover" }} />}
+              <TextField label="Description" multiline rows={3} fullWidth value={description} onChange={(e) => setDescription(e.target.value)} required />
+              <Button type="submit" variant="contained" size="large">Add Room</Button>
             </Stack>
           </form>
         </Box>
@@ -251,88 +211,68 @@ const RentRoom = () => {
 
       <Typography variant="h6" gutterBottom>Your Pending Rooms</Typography>
       <Grid container spacing={3}>
-        {rooms
-          .filter((room) => room.userId === user.uid && room.status === "pending")
-          .map((room) => (
-            <Grid item xs={12} sm={6} md={4} key={room.id}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6">{room.name}</Typography>
-                  <Typography color="warning.main">Status: Pending</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+        {rooms.filter((room) => room.userId === user.uid && room.status === "pending").map((room) => (
+          <Grid item xs={12} sm={6} md={4} key={room.id}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">{room.name}</Typography>
+                <Typography color="warning.main">Status: Pending</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
-      <Typography variant="h5" gutterBottom sx={{ mt: 5, mb: 3 }}>
-        Your Rooms Listed
-      </Typography>
-
+      <Typography variant="h5" sx={{ mt: 5, mb: 3 }}>Your Rooms Listed</Typography>
       <Grid container spacing={3}>
-        {rooms
-          .filter((room) => room.status === "approved" && room.userId === user.uid)
-          .map((room) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
-              <Card sx={{ height: 330 }}>
-                {room.imageUrl && (
-                  <img
-                    src={room.imageUrl}
-                    alt={room.name}
-                    style={{
-                      width: "100%",
-                      height: 150,
-                      objectFit: "cover",
-                      borderTopLeftRadius: 4,
-                      borderTopRightRadius: 4,
-                    }}
-                  />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                    <Typography variant="h6" color="primary">
-                      {room.name}
-                    </Typography>
-                    <IconButton
-                      color="error"
-                      onClick={() => {
-                        setSelectedRoom(room);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
+        {rooms.filter((room) => room.status === "approved" && room.userId === user.uid).map((room) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
+            <Card sx={{ height: 330 }}>
+              {room.imageUrl && <img src={room.imageUrl} alt={room.name} style={{ width: "100%", height: 150, objectFit: "cover" }} />}
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="h6" color="primary">{room.name}</Typography>
+                  <Box>
+                    <IconButton color="primary" onClick={() => {
+                      setRoomToEdit(room);
+                      setRoomName(room.name);
+                      setPrice(room.price);
+                      setLocation(room.location);
+                      setImageUrl(room.imageUrl);
+                      setImageFile(null);
+                      setDescription(room.description);
+                      setEditDialogOpen(true);
+                    }}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => {
+                      setSelectedRoom(room);
+                      setDeleteDialogOpen(true);
+                    }}>
                       <DeleteIcon />
                     </IconButton>
                   </Box>
-                  <Typography>${room.price}/month</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {room.location}
-                  </Typography>
-                  <Typography variant="caption" sx={{ mt: 2, display: "block" }}>
-                    Posted by {room.adminName || "Unknown"}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+                </Box>
+                <Typography>${room.price}/month</Typography>
+                <Typography variant="body2" color="text.secondary">{room.location}</Typography>
+                <Typography variant="caption" sx={{ mt: 2, display: "block" }}>Posted by {room.adminName || "Unknown"}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
-      {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Room</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to delete "{selectedRoom?.name}"?
-          </Typography>
+          <Typography>Are you sure you want to delete "{selectedRoom?.name}"?</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={() => handleDelete(selectedRoom?.id)} color="error" variant="contained">
-            Delete
-          </Button>
+          <Button onClick={() => handleDelete(selectedRoom?.id)} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Edit Room</DialogTitle>
         <DialogContent>
@@ -341,6 +281,8 @@ const RentRoom = () => {
             <TextField label="Price" fullWidth type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
             <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} />
             <TextField label="Image URL" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
+            {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover" }} />}
             <TextField label="Description" fullWidth multiline rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </Stack>
         </DialogContent>
