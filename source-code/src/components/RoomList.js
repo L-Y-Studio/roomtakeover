@@ -1,3 +1,4 @@
+
 "use client"
 
 import { db, auth } from "../firebase"
@@ -19,6 +20,7 @@ import {
 import MessageIcon from "@mui/icons-material/Message"
 import { getOrCreateConversation } from "../utils/chatUtils"
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+import { Link } from "react-router-dom"
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([])
@@ -26,6 +28,7 @@ const RoomList = () => {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
   const navigate = useNavigate()
+
 
   useEffect(() => {
     const q = query(collection(db, "rooms"))
@@ -80,9 +83,18 @@ const RoomList = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
+
+      <Typography
+        variant="h4"
+        component="h2"
+        gutterBottom
+        align="center"
+        sx={{ mb: 4 }}
+      >
         Available Rooms around ABAC
       </Typography>
+
+
       <Box
   sx={{
     display: "grid",
@@ -95,6 +107,11 @@ const RoomList = () => {
   }}
 >
   {rooms.filter((room) => room.status === "approved").map((room) => (
+    <Link
+            to={`/room/${room.id}`}
+            key={room.id}
+            style={{ textDecoration: "none" }}
+          >
     <Card
       key={room.id}
       sx={{
@@ -124,6 +141,7 @@ const RoomList = () => {
           }}
         />
       )}
+      
 
       <CardContent sx={{ p: 2, flexGrow: 1 }}>
         <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 600 }}>
@@ -164,10 +182,14 @@ const RoomList = () => {
         </Button>
       </Box>
     </Card>
+          </Link>
   ))}
 </Box>
 
 
+
+
+      </Box>
       <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
         <DialogTitle>Sign In Required</DialogTitle>
         <DialogContent>
@@ -180,8 +202,10 @@ const RoomList = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
-  )
-}
+      </Container>
+
+
+  );
+};
 
 export default RoomList
