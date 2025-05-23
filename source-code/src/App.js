@@ -3,20 +3,11 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import RoomList from "./components/RoomList";
 import Profile from "./components/Profile";
-
-
-
-
-
-
 import Messages from "./components/Messages";
 import Navbar from "./components/Navbar";
 import RentRoom from "./components/RentRoom";
 import AdminRoomApproval from "./components/AdminRoomApproval";
 import RoomDetail from "./components/RoomDetail";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-
 
 const theme = createTheme({
   palette: {

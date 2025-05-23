@@ -20,7 +20,7 @@ import {
 import MessageIcon from "@mui/icons-material/Message"
 import { getOrCreateConversation } from "../utils/chatUtils"
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
-
+import { Link } from "react-router-dom"
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([])
