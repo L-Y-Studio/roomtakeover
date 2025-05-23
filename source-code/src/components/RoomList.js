@@ -20,7 +20,6 @@ import MessageIcon from "@mui/icons-material/Message"
 import { getOrCreateConversation } from "../utils/chatUtils"
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 
-
 const RoomList = () => {
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(null)
@@ -85,70 +84,89 @@ const RoomList = () => {
         Available Rooms around ABAC
       </Typography>
       <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 3,
-        }}
-      >
-        {rooms.filter((room) => room.status === "approved").map((room) => (
-          <Card
-            key={room.id}
-            sx={{
-              width: 270,
-              height: 280,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              backgroundColor: "background.default",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                transform: "translateY(-4px)",
-              },
-              p: 2,
-            }}
-          >
-            <CardContent sx={{ p: 0 }}>
-              <Typography variant="h6" component="h3" gutterBottom color="primary" sx={{ fontWeight: 600, mb: 2 }}>
-                {room.name}
-              </Typography>
+  sx={{
+    display: "grid",
+    gridTemplateColumns: {
+      xs: "1fr",           // full width on mobile
+      sm: "1fr 1fr",       // 2 columns on small screens
+      md: "1fr 1fr 1fr",   // 3 columns on medium+
+    },
+    gap: 3,
+  }}
+>
+  {rooms.filter((room) => room.status === "approved").map((room) => (
+    <Card
+      key={room.id}
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        backgroundColor: "background.default",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+          transform: "translateY(-4px)",
+        },
+        overflow: "hidden",
+      }}
+    >
+      {room.imageUrl && (
+        <Box
+          component="img"
+          src={room.imageUrl}
+          alt={room.name}
+          sx={{
+            width: "100%",
+            height: 150,
+            objectFit: "cover",
+          }}
+        />
+      )}
 
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                ${room.price}/month
-              </Typography>
+      <CardContent sx={{ p: 2, flexGrow: 1 }}>
+        <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 600 }}>
+          {room.name}
+        </Typography>
 
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  mb: 2,
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  lineHeight: 1.5,
-                }}
-              >
-                {room.location}
-              </Typography>
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          ${room.price}/month
+        </Typography>
 
-              <Typography variant="caption" color="text.secondary" sx={{ mt: "auto", fontStyle: "italic" }}>
-                Posted by {room.adminName || "Unknown"}
-              </Typography>
-            </CardContent>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mb: 2,
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+            lineHeight: 1.5,
+          }}
+        >
+          {room.location}
+        </Typography>
 
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<MessageIcon />}
-              onClick={() => handleMessageClick(room)}
-              fullWidth
-            >
-              Message
-            </Button>
-          </Card>
-        ))}
+        <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+          Posted by {room.adminName || "Unknown"}
+        </Typography>
+      </CardContent>
+
+      <Box sx={{ p: 2 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={<MessageIcon />}
+          onClick={() => handleMessageClick(room)}
+          fullWidth
+        >
+          Message
+        </Button>
       </Box>
+    </Card>
+  ))}
+</Box>
+
 
       <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
         <DialogTitle>Sign In Required</DialogTitle>
@@ -165,6 +183,5 @@ const RoomList = () => {
     </Container>
   )
 }
-
 
 export default RoomList
