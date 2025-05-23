@@ -7,6 +7,7 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  updateDoc
 } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -28,6 +29,7 @@ import {
 import GoogleIcon from "@mui/icons-material/Google";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { supabase } from "../utils/supabaseClient";
@@ -37,9 +39,13 @@ const RentRoom = () => {
   const [roomName, setRoomName] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [description, setDescription] = useState("");
   const [user, setUser] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [roomToEdit, setRoomToEdit] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [imageFile, setImageFile] = useState(null);
 
@@ -93,17 +99,14 @@ const RentRoom = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!user) {
       alert("You must be signed in to add rooms.");
       return;
     }
-
-    if (!roomName || !price || !location) {
+    if (!roomName || !price || !location || !imageUrl || !description) {
       alert("Please fill all fields");
       return;
     }
-
     try {
       const imageUrl = await uploadImageToSupabase();
 
@@ -112,28 +115,42 @@ const RentRoom = () => {
         price: parseFloat(price),
         location,
         imageUrl: imageUrl || "",
+        description,
         createdAt: new Date(),
         userId: user.uid,
         adminName: user.displayName,
         status: "pending",
       });
-
       alert("Room added successfully!");
       setRoomName("");
       setPrice("");
       setLocation("");
       setImageFile(null);
+      setDescription("");
     } catch (error) {
       console.error("Error adding room:", error);
       alert("Failed to add room.");
     }
   };
 
-  if (loadingAuth) {
-    return <div>Loading user...</div>;
-  }
 
-  if (!user) {
+  const handleEditSave = async () => {
+    try {
+      await updateDoc(doc(db, "rooms", roomToEdit.id), {
+        name: roomName,
+        price: parseFloat(price),
+        location,
+        imageUrl,
+        description,
+      });
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating room:", error);
+    }
+  };
+
+  if (loadingAuth) return <div>Loading user...</div>;
+  if (!user)
     return (
       <Container sx={{ py: 4 }}>
         <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -299,6 +316,7 @@ const RentRoom = () => {
           ))}
       </Grid>
 
+      {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Room</DialogTitle>
         <DialogContent>
@@ -308,13 +326,27 @@ const RentRoom = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={() => handleDelete(selectedRoom?.id)}
-            color="error"
-            variant="contained"
-          >
+          <Button onClick={() => handleDelete(selectedRoom?.id)} color="error" variant="contained">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Room</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <TextField label="Room Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} />
+            <TextField label="Price" fullWidth type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} />
+            <TextField label="Image URL" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+            <TextField label="Description" fullWidth multiline rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </Container>

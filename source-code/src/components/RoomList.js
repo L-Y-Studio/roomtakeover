@@ -1,9 +1,9 @@
-
 "use client"
 
 import { db, auth } from "../firebase"
 import { collection, query, onSnapshot } from "firebase/firestore"
 import { useState, useEffect } from "react"
+import { SearchBar}
 import { useNavigate } from "react-router-dom"
 import {
   Container,
@@ -28,7 +28,6 @@ const RoomList = () => {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
   const navigate = useNavigate()
-
 
   useEffect(() => {
     const q = query(collection(db, "rooms"))

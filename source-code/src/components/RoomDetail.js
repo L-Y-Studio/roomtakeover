@@ -27,6 +27,7 @@ const RoomDetail = () => {
       <p>Location: {room.location}</p>
       <p>Description: {room.description}</p>
       <p>Posted By: {room.adminName}</p>
+      <p>Posted At: {new Date(room.createdAt.seconds * 1000).toLocaleDateString()}</p>
     </div>
   );
 };
