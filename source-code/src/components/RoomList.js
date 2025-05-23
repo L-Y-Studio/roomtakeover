@@ -1,28 +1,89 @@
-import { db } from "../firebase"; // Ensure this is correct
-import { collection, query, onSnapshot } from "firebase/firestore";
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+
+"use client"
+
+import { db, auth } from "../firebase"
+import { collection, query, onSnapshot } from "firebase/firestore"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   Container,
   Typography,
-  Box,
   Card,
   CardContent,
-} from "@mui/material";
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material"
+import MessageIcon from "@mui/icons-material/Message"
+import { getOrCreateConversation } from "../utils/chatUtils"
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+
 
 const RoomList = () => {
-  const [rooms, setRooms] = useState([]);
-  useEffect(() => {
-    const q = query(collection(db, "rooms"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
+  const [rooms, setRooms] = useState([])
+  const [user, setUser] = useState(null)
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+  const [selectedRoom, setSelectedRoom] = useState(null)
+  const navigate = useNavigate()
 
-    return () => unsubscribe();
-  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, "rooms"))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setRooms(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
+    })
+
+    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+    })
+
+    return () => {
+      unsubscribe()
+      authUnsubscribe()
+    }
+  }, [])
+
+  const handleMessageClick = async (room) => {
+    if (!user) {
+      setSelectedRoom(room)
+      setLoginDialogOpen(true)
+      return
+    }
+
+    if (user.uid === room.userId) {
+      alert("You cannot message yourself!")
+      return
+    }
+
+    try {
+      await getOrCreateConversation(room.userId, room.adminName)
+      navigate("/messages")
+    } catch (error) {
+      console.error("Error starting conversation:", error)
+      alert("Failed to start conversation. Please try again.")
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      setLoginDialogOpen(false)
+
+      if (selectedRoom) {
+        handleMessageClick(selectedRoom)
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+    }
+  }
 
   return (
     <Container sx={{ py: 4 }}>
+
       <Typography
         variant="h4"
         component="h2"
@@ -33,6 +94,7 @@ const RoomList = () => {
         Available Rooms around ABAC
       </Typography>
 
+
       <Box
         sx={{
           display: "flex",
@@ -41,6 +103,7 @@ const RoomList = () => {
         }}
       >
         {rooms.filter((room) => room.status === "approved").map((room) => (
+
           <Link
             to={`/room/${room.id}`}
             key={room.id}
@@ -77,16 +140,40 @@ const RoomList = () => {
                   Posted by {room.adminName || "Unknown"}
                 </Typography>
               </CardContent>
+              
+              <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<MessageIcon />}
+              onClick={() => handleMessageClick(room)}
+              fullWidth
+            >
+              Message
+            </Button>
             </Card>
           </Link>
         ))}
 
 
 
-      </Box></Container>
+      </Box>
+      <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
+        <DialogTitle>Sign In Required</DialogTitle>
+        <DialogContent>
+          <Typography>You need to sign in to message room owners.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLoginDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleLogin} variant="contained" color="primary">
+            Sign In with Google
+          </Button>
+        </DialogActions>
+      </Dialog>
+      </Container>
 
 
   );
 };
 
-export default RoomList;
+
+export default RoomList
