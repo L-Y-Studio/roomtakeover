@@ -30,6 +30,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { supabase } from "../utils/supabaseClient";
 
 const RentRoom = () => {
   const [rooms, setRooms] = useState([]);
@@ -40,6 +41,7 @@ const RentRoom = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     const q = query(collection(db, "rooms"));
@@ -56,6 +58,29 @@ const RentRoom = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  const uploadImageToSupabase = async () => {
+    if (!imageFile) return null;
+
+    const fileExt = imageFile.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `room-images/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("room-images")
+      .upload(filePath, imageFile);
+
+    if (error) {
+      console.error("Image upload error:", error);
+      return null;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("room-images")
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -80,10 +105,13 @@ const RentRoom = () => {
     }
 
     try {
+      const imageUrl = await uploadImageToSupabase();
+
       await addDoc(collection(db, "rooms"), {
         name: roomName,
         price: parseFloat(price),
         location,
+        imageUrl: imageUrl || "",
         createdAt: new Date(),
         userId: user.uid,
         adminName: user.displayName,
@@ -94,18 +122,21 @@ const RentRoom = () => {
       setRoomName("");
       setPrice("");
       setLocation("");
+      setImageFile(null);
     } catch (error) {
       console.error("Error adding room:", error);
       alert("Failed to add room.");
     }
   };
+
   if (loadingAuth) {
     return <div>Loading user...</div>;
   }
-    if (!user) {
-        return (
-        <Container sx={{ py: 4 }}>
-            <Box sx={{ textAlign: "center", mb: 4 }}>
+
+  if (!user) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography variant="body1" gutterBottom>
             You are not signed in. Please sign in to post a room.
           </Typography>
@@ -118,13 +149,12 @@ const RentRoom = () => {
             Sign In with Google
           </Button>
         </Box>
-        </Container>
-        );
-    }  
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ py: 4 }}>
-        
       <Typography
         variant="h4"
         component="h2"
@@ -134,162 +164,139 @@ const RentRoom = () => {
       >
         Rent Your Room
       </Typography>
-    
-      {user ? (
-        <Box sx={{ mb: 4, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-          {user && (
-            <Typography variant="h6" gutterBottom>
-                Welcome, {user.displayName}
-            </Typography>
-          )}
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<LogoutIcon />}
-            onClick={() => signOut(auth)}
-          >
-            Sign Out
-          </Button>
-    
-          <Box sx={{ mt:5, mb: 4, maxWidth: 400, width: "100%" }}>
-              <Typography variant="h6" gutterBottom>
-                Add New Room
-              </Typography>
-              <form onSubmit={handleSubmit}>
-                <Stack spacing={3}>
-                  <TextField
-                    fullWidth
-                    label="Room Name"
-                    value={roomName}
-                    onChange={(e) => setRoomName(e.target.value)}
-                    required
-                  />
-                  <TextField
-                    fullWidth
-                    label="Price"
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                    InputProps={{
-                      startAdornment: <AttachMoneyIcon color="action" />,
-                    }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                    InputProps={{
-                      startAdornment: <LocationOnIcon color="action" />,
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                  >
-                    Add Room
-                  </Button>
-                </Stack>
-              </form>
-           </Box>
-        </Box>
-      ) : (
-        <Box sx={{ textAlign: "center", mb: 4}}>
-          <Typography variant="body1" gutterBottom>
-            You are not signed in.
+
+      <Box sx={{ mb: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <Typography variant="h6" gutterBottom>
+          Welcome, {user.displayName}
+        </Typography>
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={<LogoutIcon />}
+          onClick={() => signOut(auth)}
+        >
+          Sign Out
+        </Button>
+
+        <Box sx={{ mt: 5, mb: 4, maxWidth: 400, width: "100%" }}>
+          <Typography variant="h6" gutterBottom>
+            Add New Room
           </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<GoogleIcon />}
-            onClick={signInWithGoogle}
-          >
-            Sign In with Google
-          </Button>
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={3}>
+              <TextField
+                fullWidth
+                label="Room Name"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Price"
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                required
+                InputProps={{
+                  startAdornment: <AttachMoneyIcon color="action" />,
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                required
+                InputProps={{
+                  startAdornment: <LocationOnIcon color="action" />,
+                }}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files[0])}
+              />
+              {imageFile && (
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="preview"
+                  style={{ width: "100%", maxHeight: 200, objectFit: "cover" }}
+                />
+              )}
+              <Button type="submit" variant="contained" color="primary" size="large">
+                Add Room
+              </Button>
+            </Stack>
+          </form>
         </Box>
-      )}
+      </Box>
+
       <Typography variant="h6" gutterBottom>Your Pending Rooms</Typography>
-    <Grid container spacing={3}>
-      {rooms
-        .filter((room) => room.userId === user.uid && room.status === "pending")
-        .map((room) => (
-          <Grid item xs={12} sm={6} md={4} key={room.id}>
-            <Card><CardContent>
-              <Typography variant="h6">{room.name}</Typography>
-              <Typography color="warning.main">Status: Pending</Typography>
-            </CardContent></Card>
-          </Grid>
-        ))}
-    </Grid>
-    
-      <Typography variant="h5" gutterBottom sx={{ mb: 3}}>
+      <Grid container spacing={3}>
+        {rooms
+          .filter((room) => room.userId === user.uid && room.status === "pending")
+          .map((room) => (
+            <Grid item xs={12} sm={6} md={4} key={room.id}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6">{room.name}</Typography>
+                  <Typography color="warning.main">Status: Pending</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+      </Grid>
+
+      <Typography variant="h5" gutterBottom sx={{ mt: 5, mb: 3 }}>
         Your Rooms Listed
       </Typography>
 
       <Grid container spacing={3}>
         {rooms
-        .filter((room) => room.status === "approved" && room.userId === user.uid)
-        .map((room) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
-            <Card
-            sx={{
-              width: 270,
-              height: 270,
-              backgroundColor: "background.default",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              transition: "all 0.3s ease",
-              '&:hover': {
-                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            <CardContent sx={{ flexGrow: 1 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2,}}>
-                <Typography variant="h6" color="primary" sx={{ fontWeight: 550 }}>
-                  {room.name}
-                </Typography>
-
-                <IconButton
-                  color="error"
-                  onClick={() => {
-                    setSelectedRoom(room);
-                    setDeleteDialogOpen(true);
-                  }}
-                >
-                 <DeleteIcon />
-                </IconButton>
-              </Box>
-
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                ${room.price}/month
-              </Typography>
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ whiteSpace: "normal", wordBreak: "break-word", lineHeight: 1.5,}}
-              >
-                {room.location}
-              </Typography>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2,}}>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: "auto", fontStyle: "italic" }}>
-                  Posted by {room.adminName || "Unknown"}
-                </Typography>
-              </Box>
-            </CardContent>
-            </Card>
-
-          </Grid>
-        ))}
+          .filter((room) => room.status === "approved" && room.userId === user.uid)
+          .map((room) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
+              <Card sx={{ height: 330 }}>
+                {room.imageUrl && (
+                  <img
+                    src={room.imageUrl}
+                    alt={room.name}
+                    style={{
+                      width: "100%",
+                      height: 150,
+                      objectFit: "cover",
+                      borderTopLeftRadius: 4,
+                      borderTopRightRadius: 4,
+                    }}
+                  />
+                )}
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography variant="h6" color="primary">
+                      {room.name}
+                    </Typography>
+                    <IconButton
+                      color="error"
+                      onClick={() => {
+                        setSelectedRoom(room);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                  <Typography>${room.price}/month</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {room.location}
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 2, display: "block" }}>
+                    Posted by {room.adminName || "Unknown"}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
       </Grid>
 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
