@@ -1,3 +1,4 @@
+
 "use client"
 
 import { db, auth } from "../firebase"
@@ -19,7 +20,7 @@ import {
 import MessageIcon from "@mui/icons-material/Message"
 import { getOrCreateConversation } from "../utils/chatUtils"
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
-
+import { Link } from "react-router-dom"
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([])
@@ -27,6 +28,7 @@ const RoomList = () => {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
   const navigate = useNavigate()
+
 
   useEffect(() => {
     const q = query(collection(db, "rooms"))
@@ -81,9 +83,18 @@ const RoomList = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
+
+      <Typography
+        variant="h4"
+        component="h2"
+        gutterBottom
+        align="center"
+        sx={{ mb: 4 }}
+      >
         Available Rooms around ABAC
       </Typography>
+
+
       <Box
         sx={{
           display: "flex",
@@ -92,52 +103,45 @@ const RoomList = () => {
         }}
       >
         {rooms.filter((room) => room.status === "approved").map((room) => (
-          <Card
+
+          <Link
+            to={`/room/${room.id}`}
             key={room.id}
-            sx={{
-              width: 270,
-              height: 280,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              backgroundColor: "background.default",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                transform: "translateY(-4px)",
-              },
-              p: 2,
-            }}
+            style={{ textDecoration: "none" }}
           >
-            <CardContent sx={{ p: 0 }}>
-              <Typography variant="h6" component="h3" gutterBottom color="primary" sx={{ fontWeight: 600, mb: 2 }}>
-                {room.name}
-              </Typography>
-
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                ${room.price}/month
-              </Typography>
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  mb: 2,
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  lineHeight: 1.5,
-                }}
-              >
-                {room.location}
-              </Typography>
-
-              <Typography variant="caption" color="text.secondary" sx={{ mt: "auto", fontStyle: "italic" }}>
-                Posted by {room.adminName || "Unknown"}
-              </Typography>
-            </CardContent>
-
-            <Button
+            <Card
+              sx={{
+                width: 270,
+                height: 250,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                backgroundColor: "background.default",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                transition: "all 0.3s ease",
+                '&:hover': {
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                  transform: "translateY(-4px)",
+                },
+                p: 2
+              }}
+            >
+              <CardContent sx={{ p: 0 }}>
+                <Typography variant="h6" component="h3" gutterBottom color="primary" sx={{ fontWeight: 600, mb: 2 }}>
+                  {room.name}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  ${room.price}/month
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, whiteSpace: "normal", wordBreak: "break-word", lineHeight: 1.5 }}>
+                  {room.location}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: "auto", fontStyle: "italic" }}>
+                  Posted by {room.adminName || "Unknown"}
+                </Typography>
+              </CardContent>
+              
+              <Button
               variant="outlined"
               color="primary"
               startIcon={<MessageIcon />}
@@ -146,10 +150,13 @@ const RoomList = () => {
             >
               Message
             </Button>
-          </Card>
+            </Card>
+          </Link>
         ))}
-      </Box>
 
+
+
+      </Box>
       <Dialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)}>
         <DialogTitle>Sign In Required</DialogTitle>
         <DialogContent>
@@ -162,9 +169,11 @@ const RoomList = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
-  )
-}
+      </Container>
+
+
+  );
+};
 
 
 export default RoomList
