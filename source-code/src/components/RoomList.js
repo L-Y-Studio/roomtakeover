@@ -1,9 +1,9 @@
-
 "use client"
 
 import { db, auth } from "../firebase"
 import { collection, query, onSnapshot } from "firebase/firestore"
 import { useState, useEffect } from "react"
+import { SearchBar}
 import { useNavigate } from "react-router-dom"
 import {
   Container,
@@ -28,7 +28,6 @@ const RoomList = () => {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
   const navigate = useNavigate()
-
 
   useEffect(() => {
     const q = query(collection(db, "rooms"))
@@ -127,6 +126,9 @@ const RoomList = () => {
               }}
             >
               <CardContent sx={{ p: 0 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {room.imageUrl && <Box component="img" src={room.imageUrl} alt={room.name} sx={{ width: "100%", height: 140, objectFit: "cover" }} />}
+                </Typography>
                 <Typography variant="h6" component="h3" gutterBottom color="primary" sx={{ fontWeight: 600, mb: 2 }}>
                   {room.name}
                 </Typography>
