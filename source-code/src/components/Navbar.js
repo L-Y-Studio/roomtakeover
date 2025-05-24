@@ -15,7 +15,6 @@ const Navbar = () => {
     { label: "Find Rooms", path: "/" },
     { label: "Rent Rooms", path: "/rent" },
     { label: "Admin", path: "/admin" },
-    { label: "Messages", path: "/messages" },
 
   ];
 
@@ -61,24 +60,6 @@ const Navbar = () => {
             );
 
           })}
-
-          <Button
-            color="inherit"
-            onClick={() => navigate("/messages")}
-            sx={(theme) => ({
-              borderBottom: location.pathname === "/messages" ? `2px solid ${theme.palette.secondary.main}` : "none",
-              borderRadius: 0,
-              textTransform: "none",
-              fontSize: "1rem",
-              "&:hover": {
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-              },
-            })}
-          >
-            <Badge badgeContent={unreadCount} color="error" sx={{ mr: 1 }}>
-              Messages
-            </Badge>
-          </Button>
         </Box>
       </Toolbar>
     </AppBar>
