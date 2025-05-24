@@ -19,9 +19,14 @@ import {
 import MessageIcon from "@mui/icons-material/Message"
 import { getOrCreateConversation } from "../utils/chatUtils"
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
-
+import { Slider} from "@mui/material"
 
 const RoomList = () => {
+  const [priceRange, setPriceRange] = useState(5000)
+
+  const handlePriceChange = (event, newValue) => {
+    setPriceRange(newValue)
+  }
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(null)
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
@@ -84,6 +89,23 @@ const RoomList = () => {
       <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
         Available Rooms around ABAC
       </Typography>
+      
+{/* You can design the filter here */}
+<Box sx={{ mb: 4 }}>
+  <Typography variant="h6" gutterBottom>
+    Price range: ฿{priceRange}
+  </Typography>
+  <Slider
+    value={priceRange}
+    onChange={handlePriceChange}
+    min={0}
+    max={15000}
+    step={500}
+    valueLabelDisplay="auto"
+    sx={{ width: 300 }}
+  />
+</Box>
+
       <Box
         sx={{
           display: "flex",
@@ -91,7 +113,7 @@ const RoomList = () => {
           gap: 3,
         }}
       >
-        {rooms.filter((room) => room.status === "approved").map((room) => (
+        {rooms.filter((room) => room.status === "approved" && room.price <= priceRange).map((room) => (
           <Card
             key={room.id}
             sx={{
