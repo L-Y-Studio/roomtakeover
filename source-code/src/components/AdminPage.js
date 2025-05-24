@@ -80,6 +80,19 @@ useEffect(() => {
           <Grid item xs={12} sm={6} md={4} key={room.id}>
             <Card>
               <CardContent>
+                {room.imageUrl && (
+                  <Box
+                    component="img"
+                    src={room.imageUrl}
+                    alt={room.name}
+                    sx={{
+                      width: "100%",
+                      height: 150,
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
+
                 <Typography variant="h6">{room.name}</Typography>
                 <Typography>${room.price}/month</Typography>
                 <Typography>{room.location}</Typography>
