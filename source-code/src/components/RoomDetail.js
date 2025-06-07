@@ -1,7 +1,9 @@
+// src/pages/RoomDetail.js
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { Container, Typography, Box } from "@mui/material";
 
 const RoomDetail = () => {
   const { id } = useParams();
@@ -9,39 +11,47 @@ const RoomDetail = () => {
 
   useEffect(() => {
     const fetchRoom = async () => {
-      const docRef = doc(db, "rooms", id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setRoom({ id: docSnap.id, ...docSnap.data() });
+      const roomRef = doc(db, "rooms", id);
+      const roomSnap = await getDoc(roomRef);
+      if (roomSnap.exists()) {
+        setRoom({ id: roomSnap.id, ...roomSnap.data() });
       }
     };
+
     fetchRoom();
   }, [id]);
 
-   if (!room) return <p>Loading...</p>;
+  if (!room) return <div>Loading...</div>;
 
   return (
-    <div>
-  {(room.imageFile || room.imageUrl) && (
-    <img
-      src={room.imageFile || room.imageUrl}
-      alt={room.name}
-      style={{ width: "100%", maxWidth: "400px", objectFit: "cover" }}
-    />
-  )}
-  <h1>{room.name}</h1>
-  <p>Price: ${room.price}</p>
-  <p>Location: {room.location}</p>
-  <p>Description: {room.description}</p>
-  <p>Posted By: {room.adminName}</p>
-  <p>
-    Posted At:{" "}
-    {room.createdAt?.seconds
-      ? new Date(room.createdAt.seconds * 1000).toLocaleDateString()
-      : "Unknown"}
-  </p>
-</div>
+    <Container sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>{room.name}</Typography>
+      {room.imageUrl && (
+        <img
+  src={room.imageUrl}
+  alt={room.name}
+  style={{
+    width: "100%",
+    height: "400px",
+    objectFit: "cover",
+    borderRadius: "8px"
+  }}
+/>
 
+      )}
+      <Box mt={2}>
+        <Typography><strong>Price:</strong> ฿{room.price} / month</Typography>
+        <Typography><strong>Location:</strong> {room.location}</Typography>
+        <Typography><strong>Room Number:</strong> {room.roomNumber}</Typography>
+        <Typography><strong>Floor:</strong> {room.floor}</Typography>
+        <Typography><strong>Building :</strong> {room.building}</Typography>
+        <Typography><strong>Map:</strong> <a href={room.locationMap} target="_blank" rel="noreferrer">View on Google Maps</a></Typography>
+        <Typography><strong>Room Type:</strong> {room.roomType}</Typography>
+        <Typography><strong>Facilities:</strong> {room.facilities?.join(", ")}</Typography>
+        <Typography><strong>Deposit:</strong> ฿{room.deposit}</Typography>
+        <Typography><strong>Description:</strong> {room.description}</Typography>
+      </Box>
+    </Container>
   );
 };
 
