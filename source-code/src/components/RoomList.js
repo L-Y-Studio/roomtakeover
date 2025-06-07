@@ -25,6 +25,7 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import { Link } from "react-router-dom";
+import { useFloatingChat } from "../contexts/FloatingChatContext";
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([]);
@@ -35,6 +36,7 @@ const RoomList = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const navigate = useNavigate();
+  const { openFloatingChat } = useFloatingChat();
 
   useEffect(() => {
     const q = query(collection(db, "rooms"));
@@ -65,8 +67,8 @@ const RoomList = () => {
     }
 
     try {
-      await getOrCreateConversation(room.userId, room.adminName);
-      navigate("/messages");
+      const conversationId = await getOrCreateConversation(room.userId, room.adminName);
+      openFloatingChat(conversationId);
     } catch (error) {
       console.error("Error starting conversation:", error);
       alert("Failed to start conversation. Please try again.");

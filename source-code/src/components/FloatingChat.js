@@ -37,15 +37,16 @@ import MinimizeIcon from "@mui/icons-material/Minimize"
 import GoogleIcon from "@mui/icons-material/Google"
 import { signInWithGoogle } from "../firebase"
 import Chat from "./Chat"
+import { useFloatingChat } from "../contexts/FloatingChatContext"
 
 const FloatingChat = () => {
   const [user, setUser] = useState(null)
   const [conversations, setConversations] = useState([])
   const [unreadCounts, setUnreadCounts] = useState({})
   const [totalUnread, setTotalUnread] = useState(0)
-  const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeChats, setActiveChats] = useState([])
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+  const { isDrawerOpen, activeConversationId, closeFloatingChat } = useFloatingChat()
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -54,6 +55,15 @@ const FloatingChat = () => {
     })
     return () => unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (activeConversationId && user) {
+      const conversation = conversations.find(c => c.id === activeConversationId)
+      if (conversation) {
+        handleOpenChat(conversation)
+      }
+    }
+  }, [activeConversationId, conversations, user])
 
   useEffect(() => {
     const total = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0)
@@ -128,7 +138,7 @@ const FloatingChat = () => {
       ])
     }
 
-    setDrawerOpen(false)
+    closeFloatingChat()
     await markConversationAsRead(conversation.id)
   }
 
@@ -175,7 +185,7 @@ const FloatingChat = () => {
           width: 56,
           height: 56,
         }}
-        onClick={() => (!user ? setLoginDialogOpen(true) : setDrawerOpen(true))}
+        onClick={() => (!user ? setLoginDialogOpen(true) : closeFloatingChat())}
       >
         <Badge badgeContent={totalUnread} color="error" overlap="circular">
           <ChatIcon sx={{ fontSize: 24 }} />
@@ -183,11 +193,11 @@ const FloatingChat = () => {
       </Fab>
 
       {/* Conversations Drawer */}
-      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+      <Drawer anchor="right" open={isDrawerOpen} onClose={closeFloatingChat}>
         <Box sx={{ width: 320, p: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <Typography variant="h6">Messages</Typography>
-            <IconButton onClick={() => setDrawerOpen(false)}>
+            <IconButton onClick={closeFloatingChat}>
               <CloseIcon />
             </IconButton>
           </Box>
