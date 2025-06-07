@@ -3,9 +3,10 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import RoomList from "./components/RoomList";
 import Profile from "./components/Profile";
-import Messages from "./components/Messages";
+import FloatingChat from "./components/FloatingChat";
 import Navbar from "./components/Navbar";
 import RentRoom from "./components/RentRoom";
+import { NotificationProvider } from "./context/NotificationContext"; 
 import AdminRoomApproval from "./components/AdminRoomApproval";
 import RoomDetail from "./components/RoomDetail";
 
@@ -39,23 +40,24 @@ const theme = createTheme({
 
 function App() {
   return (
+    <NotificationProvider>
+      
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
         <Navbar />
-
           <Routes>
             <Route path="/" element={<RoomList />} />
             <Route path="/room/:id" element={<RoomDetail />} />
             <Route path="/admin" element={<AdminRoomApproval />} />
             <Route path="/rent" element={<RentRoom />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/messages" element={<Messages />} />
           </Routes>
+          <FloatingChat />
       </Router>
     </ThemeProvider>
-  );
-
+    </NotificationProvider>
+  )
 }
 
 export default App

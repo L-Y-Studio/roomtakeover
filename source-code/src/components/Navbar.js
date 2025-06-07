@@ -1,21 +1,20 @@
 
 "use client"
-
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material";
+import { useNavigate, useLocation } from "react-router-dom"
+import { AppBar, Toolbar, Button, Typography, Box, Badge } from "@mui/material"
+import { useNotifications } from "../context/NotificationContext"
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { unreadCount = 0 } = useNotifications() || {}
 
   const navItems = [
     { label: "Profile", path: "/profile" },
     { label: "Find Rooms", path: "/" },
     { label: "Rent Rooms", path: "/rent" },
     { label: "Admin", path: "/admin" },
-    { label: "Messages", path: "/messages" },
 
   ];
 

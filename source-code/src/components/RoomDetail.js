@@ -22,12 +22,26 @@ const RoomDetail = () => {
 
   return (
     <div>
-      <h1>{room.name}</h1>
-      <p>Price: ${room.price}</p>
-      <p>Location: {room.location}</p>
-      <p>Description: {room.description}</p>
-      <p>Posted By: {room.adminName}</p>
-    </div>
+  {(room.imageFile || room.imageUrl) && (
+    <img
+      src={room.imageFile || room.imageUrl}
+      alt={room.name}
+      style={{ width: "100%", maxWidth: "400px", objectFit: "cover" }}
+    />
+  )}
+  <h1>{room.name}</h1>
+  <p>Price: ${room.price}</p>
+  <p>Location: {room.location}</p>
+  <p>Description: {room.description}</p>
+  <p>Posted By: {room.adminName}</p>
+  <p>
+    Posted At:{" "}
+    {room.createdAt?.seconds
+      ? new Date(room.createdAt.seconds * 1000).toLocaleDateString()
+      : "Unknown"}
+  </p>
+</div>
+
   );
 };
 
