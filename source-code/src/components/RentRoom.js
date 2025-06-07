@@ -146,6 +146,7 @@ const RentRoom = () => {
         userId: user.uid,
         adminName: user.displayName,
         status: "pending",
+        building,
       });
 
       alert("Room added successfully!");
@@ -186,6 +187,7 @@ const RentRoom = () => {
         taxiService,
         vanService,
         deposit: parseFloat(deposit),
+        building,
       });
       setEditDialogOpen(false);
     } catch (error) {
