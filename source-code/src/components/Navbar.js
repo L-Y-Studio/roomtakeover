@@ -2,7 +2,7 @@
 "use client"
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom"
-import { AppBar, Toolbar, Button, Typography, Box, Badge } from "@mui/material"
+import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material"
 import { useNotifications } from "../context/NotificationContext"
 
 const Navbar = () => {

@@ -48,6 +48,16 @@ const RentRoom = () => {
   const [roomToEdit, setRoomToEdit] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [imageFile, setImageFile] = useState(null);
+  const [contract, setContract] = useState("");
+  const [electric, setElectric] = useState("");
+  const [roomNumber, setRoomNumber] = useState("");
+  const [floor, setFloor] = useState("");
+  const [locationMap, setLocationMap] = useState("");
+  const [roomType, setRoomType] = useState("");
+  const [facilities, setFacilities] = useState([]);
+  const [taxiService, setTaxiService] = useState("no");
+  const [vanService, setVanService] = useState("no");
+  const [deposit, setDeposit] = useState("");
 
   useEffect(() => {
     const q = query(collection(db, "rooms"));
@@ -121,6 +131,16 @@ const RentRoom = () => {
         location,
         imageUrl: finalImageUrl,
         description,
+        contract,
+        electric,
+        roomNumber,
+        floor,
+        locationMap,
+        roomType,
+        facilities,
+        taxiService,
+        vanService,
+        deposit: parseFloat(deposit),
         createdAt: new Date(),
         userId: user.uid,
         adminName: user.displayName,
@@ -154,6 +174,16 @@ const RentRoom = () => {
         location,
         imageUrl: finalImageUrl,
         description,
+        contract,
+        electric,
+        roomNumber,
+        floor,
+        locationMap,
+        roomType,
+        facilities,
+        taxiService,
+        vanService,
+        deposit: parseFloat(deposit),
       });
       setEditDialogOpen(false);
     } catch (error) {
@@ -194,9 +224,64 @@ const RentRoom = () => {
 
         <Box sx={{ mt: 5, mb: 4, maxWidth: 400, width: "100%" }}>
           <Typography variant="h6">Add New Room</Typography>
+          <br></br>
           <form onSubmit={handleSubmit}>
             <Stack spacing={3}>
               <TextField label="Condo Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} required />
+                <TextField label="Room Number" fullWidth value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} />
+              <TextField label="Contract Duration" fullWidth value={contract} onChange={(e) => setContract(e.target.value)} />
+              <TextField label="Electric Rate (per unit)" fullWidth value={electric} onChange={(e) => setElectric(e.target.value)} />
+              
+              <TextField label="Floor" fullWidth value={floor} onChange={(e) => setFloor(e.target.value)} />
+              <TextField label="Google Map URL" fullWidth value={locationMap} onChange={(e) => setLocationMap(e.target.value)} />
+              <TextField
+                label=""
+                select
+                SelectProps={{ native: true }}
+                fullWidth
+                value={roomType}
+                onChange={(e) => setRoomType(e.target.value)}
+              >
+                <option value="">Select Room Type</option>
+                <option value="studio">Studio</option>
+                <option value="standard">Standard</option>
+                <option value="double">Double</option>
+                <option value="villa">Villa</option>
+              </TextField>
+
+              <Box>
+                <Typography variant="subtitle1">Facilities</Typography>
+                {["swimming", "gym", "cleaning", "microwave", "washing machine", "wifi", "refrigerator", "air-con", "office service", "security", "parking", "smoking", "pet friendly", "guest"].map((f) => (
+                  <label key={f} style={{ marginRight: 10 }}>
+                    <input
+                      type="checkbox"
+                      checked={facilities.includes(f)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFacilities([...facilities, f]);
+                        } else {
+                          setFacilities(facilities.filter((item) => item !== f));
+                        }
+                      }}
+                    />
+                    {" " + f}
+                  </label>
+                ))}
+              </Box>
+
+              <TextField label="Taxi Service" select SelectProps={{ native: true }} fullWidth value={taxiService} onChange={(e) => setTaxiService(e.target.value)}>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </TextField>
+
+              <TextField label="Van Service" select SelectProps={{ native: true }} fullWidth value={vanService} onChange={(e) => setVanService(e.target.value)}>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </TextField>
+
+              <TextField label="Deposit Amount" type="number" fullWidth value={deposit} onChange={(e) => setDeposit(e.target.value)} />
+
+              
               <TextField label="Price" type="number" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} required InputProps={{ startAdornment: <AttachMoneyIcon color="action" /> }} />
               <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} required InputProps={{ startAdornment: <LocationOnIcon color="action" /> }} />
               <TextField label="Image URL (optional if uploading)" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
@@ -242,6 +327,17 @@ const RentRoom = () => {
                       setImageFile(null);
                       setDescription(room.description);
                       setEditDialogOpen(true);
+                      setContract(room.contract || "");
+                      setElectric(room.electric || "");
+                      setRoomNumber(room.roomNumber || "");
+                      setFloor(room.floor || "");
+                      setLocationMap(room.locationMap || "");
+                      setRoomType(room.roomType || "");
+                      setFacilities(room.facilities || []);
+                      setTaxiService(room.taxiService || "no");
+                      setVanService(room.vanService || "no");
+                      setDeposit(room.deposit || "");
+
                     }}>
                       <EditIcon />
                     </IconButton>
@@ -253,7 +349,7 @@ const RentRoom = () => {
                     </IconButton>
                   </Box>
                 </Box>
-                <Typography>${room.price}/month</Typography>
+                <Typography>฿{room.price}/month</Typography>
                 <Typography variant="body2" color="text.secondary">{room.location}</Typography>
                 <Typography variant="caption" sx={{ mt: 2, display: "block" }}>Posted by {room.adminName || "Unknown"}</Typography>
               </CardContent>
