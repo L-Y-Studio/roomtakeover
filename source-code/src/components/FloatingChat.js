@@ -46,7 +46,7 @@ const FloatingChat = () => {
   const [totalUnread, setTotalUnread] = useState(0)
   const [activeChats, setActiveChats] = useState([])
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
-  const { isDrawerOpen, activeConversationId, closeFloatingChat } = useFloatingChat()
+  const { isDrawerOpen, activeConversationId, closeFloatingChat, openFloatingChat } = useFloatingChat()
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -185,7 +185,7 @@ const FloatingChat = () => {
           width: 56,
           height: 56,
         }}
-        onClick={() => (!user ? setLoginDialogOpen(true) : closeFloatingChat())}
+        onClick={() => (!user ? setLoginDialogOpen(true) : openFloatingChat())}
       >
         <Badge badgeContent={totalUnread} color="error" overlap="circular">
           <ChatIcon sx={{ fontSize: 24 }} />

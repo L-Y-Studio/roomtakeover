@@ -6,8 +6,10 @@ export const FloatingChatProvider = ({ children }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState(null);
 
-  const openFloatingChat = (conversationId) => {
-    setActiveConversationId(conversationId);
+  const openFloatingChat = (conversationId = null) => {
+    if (conversationId) {
+      setActiveConversationId(conversationId);
+    }
     setIsDrawerOpen(true);
   };
 
