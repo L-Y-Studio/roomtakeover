@@ -38,6 +38,7 @@ const RentRoom = () => {
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState("");
   const [price, setPrice] = useState("");
+  const [building, setBuilding] = useState("");
   const [location, setLocation] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -145,11 +146,13 @@ const RentRoom = () => {
         userId: user.uid,
         adminName: user.displayName,
         status: "pending",
+        building,
       });
 
       alert("Room added successfully!");
       setRoomName("");
       setPrice("");
+      setBuilding("");
       setLocation("");
       setImageFile(null);
       setImageUrl("");
@@ -184,6 +187,7 @@ const RentRoom = () => {
         taxiService,
         vanService,
         deposit: parseFloat(deposit),
+        building,
       });
       setEditDialogOpen(false);
     } catch (error) {
@@ -222,74 +226,120 @@ const RentRoom = () => {
           Sign Out
         </Button>
 
-        <Box sx={{ mt: 5, mb: 4, maxWidth: 400, width: "100%" }}>
+        <Box sx={{ mt: 5, mb: 4, maxWidth: 800, width: "100%" }}>
           <Typography variant="h6">Add New Room</Typography>
           <br></br>
           <form onSubmit={handleSubmit}>
-            <Stack spacing={3}>
-              <TextField label="Condo Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} required />
-                <TextField label="Room Number" fullWidth value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} />
-              <TextField label="Contract Duration" fullWidth value={contract} onChange={(e) => setContract(e.target.value)} />
-              <TextField label="Electric Rate (per unit)" fullWidth value={electric} onChange={(e) => setElectric(e.target.value)} />
-              
-              <TextField label="Floor" fullWidth value={floor} onChange={(e) => setFloor(e.target.value)} />
-              <TextField label="Google Map URL" fullWidth value={locationMap} onChange={(e) => setLocationMap(e.target.value)} />
-              <TextField
-                label=""
-                select
-                SelectProps={{ native: true }}
-                fullWidth
-                value={roomType}
-                onChange={(e) => setRoomType(e.target.value)}
-              >
-                <option value="">Select Room Type</option>
-                <option value="studio">Studio</option>
-                <option value="standard">Standard</option>
-                <option value="double">Double</option>
-                <option value="villa">Villa</option>
-              </TextField>
+            <Grid container spacing={3}>
+  <Grid item xs={12} sm={1}>
+    <TextField label="Condo Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} required />
+  </Grid>
+  <Grid item xs={12} sm={6}>
+    <TextField label="Room Number" fullWidth value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} required/>
+  </Grid>
 
-              <Box>
-                <Typography variant="subtitle1">Facilities</Typography>
-                {["swimming", "gym", "cleaning", "microwave", "washing machine", "wifi", "refrigerator", "air-con", "office service", "security", "parking", "smoking", "pet friendly", "guest"].map((f) => (
-                  <label key={f} style={{ marginRight: 10 }}>
-                    <input
-                      type="checkbox"
-                      checked={facilities.includes(f)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFacilities([...facilities, f]);
-                        } else {
-                          setFacilities(facilities.filter((item) => item !== f));
-                        }
-                      }}
-                    />
-                    {" " + f}
-                  </label>
-                ))}
-              </Box>
+  <Grid item xs={12} sm={6}>
+    <TextField label="Contract Duration" fullWidth value={contract} onChange={(e) => setContract(e.target.value)} required/>
+  </Grid>
+  <Grid item xs={12} sm={6}>
+    <TextField label="Electric Rate (per unit)" fullWidth value={electric} onChange={(e) => setElectric(e.target.value)} required/>
+  </Grid>
 
-              <TextField label="Taxi Service" select SelectProps={{ native: true }} fullWidth value={taxiService} onChange={(e) => setTaxiService(e.target.value)}>
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </TextField>
+  <Grid item xs={12} sm={6}>
+    <TextField label="Floor" fullWidth value={floor} onChange={(e) => setFloor(e.target.value)} required/>
+  </Grid>
+  <Grid item xs={12} sm={6} >
+    <TextField label="Building" fullWidth value={building} onChange={(e) => setBuilding(e.target.value)} />
+  </Grid>
+  
 
-              <TextField label="Van Service" select SelectProps={{ native: true }} fullWidth value={vanService} onChange={(e) => setVanService(e.target.value)}>
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-              </TextField>
+  <Grid item xs={12} sm={6}>
+    <TextField
+      label=""
+      select
+      SelectProps={{ native: true }}
+      fullWidth
+      value={roomType}
+      onChange={(e) => setRoomType(e.target.value)}
+      sx={{ width: '123%' }}
+    >
+      <option value="">Select Room Type</option>
+      <option value="studio">Studio</option>
+      <option value="standard">Standard</option>
+      <option value="double">Double</option>
+      <option value="villa">Villa</option>
+    </TextField>
+  </Grid>
 
-              <TextField label="Deposit Amount" type="number" fullWidth value={deposit} onChange={(e) => setDeposit(e.target.value)} />
+  <Grid item xs={12}>
+    <Typography variant="subtitle1" sx={{ mb: 1 }}>Facilities</Typography>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+      {["swimming", "gym", "cleaning", "microwave", "washing machine", "wifi", "refrigerator", "air-con", "office service", "security", "parking", "smoking", "pet friendly", "guest"].map((f) => (
+        <label key={f}>
+          <input
+            type="checkbox"
+            checked={facilities.includes(f)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setFacilities([...facilities, f]);
+              } else {
+                setFacilities(facilities.filter((item) => item !== f));
+              }
+            }}
+          />
+          {" " + f}
+        </label>
+      ))}
+    </Box>
+  </Grid>
 
-              
-              <TextField label="Price" type="number" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} required InputProps={{ startAdornment: <AttachMoneyIcon color="action" /> }} />
-              <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} required InputProps={{ startAdornment: <LocationOnIcon color="action" /> }} />
-              <TextField label="Image URL (optional if uploading)" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-              <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
-              {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover" }} />}
-              <TextField label="Description" multiline rows={3} fullWidth value={description} onChange={(e) => setDescription(e.target.value)} required />
-              <Button type="submit" variant="contained" size="large">Add Room</Button>
-            </Stack>
+  <Grid item xs={12} sm={6} sx={{ width: '20%' }}>
+    <TextField label="Taxi Service" select SelectProps={{ native: true }} fullWidth value={taxiService} onChange={(e) => setTaxiService(e.target.value)} >
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </TextField>
+  </Grid>
+
+  <Grid item xs={12} sm={6} sx={{ width: '20%' }}>
+    <TextField label="Van Service" select SelectProps={{ native: true }} fullWidth value={vanService} onChange={(e) => setVanService(e.target.value)}>
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </TextField>
+  </Grid>
+  <Grid item xs={12} sm={6} sx={{ width: '42%' }}>
+    <TextField label="Deposit Amount" type="number" fullWidth value={deposit} onChange={(e) => setDeposit(e.target.value)} required/>
+  </Grid>
+  <Grid item xs={12} sm={6} sx={{ width: '20%' }}>
+    <TextField label="Price" type="number" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} required InputProps={{ startAdornment: <AttachMoneyIcon color="action" /> }} />
+  </Grid>
+
+  <Grid item xs={12} sx={{ width: '65%' }}>
+    <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} required InputProps={{ startAdornment: <LocationOnIcon color="action" /> }}  />
+  </Grid>
+  <Grid item xs={12} sm={6} sx={{ width: '35%' }} >
+    <TextField label="Google Map URL" fullWidth value={locationMap} onChange={(e) => setLocationMap(e.target.value)} />
+  </Grid>
+
+  <Grid item xs={12} sx={{ width: '50%' }}>
+    <TextField label="Image URL (optional if uploading)" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+  </Grid>
+
+  
+
+  <Grid item xs={12} sx={{ width: '65%' }}>
+    <TextField label="Description" multiline rows={3} fullWidth value={description} onChange={(e) => setDescription(e.target.value)} required />
+  </Grid>
+
+  <Grid item xs={12}>
+    <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
+    {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover", marginTop: 8 }} />}
+  </Grid>
+
+  <Grid item xs={12}>
+    <Button type="submit" variant="contained" size="large" fullWidth>Add Room</Button>
+  </Grid>
+</Grid>
+
           </form>
         </Box>
       </Box>
@@ -310,7 +360,8 @@ const RentRoom = () => {
 
       <Typography variant="h5" sx={{ mt: 5, mb: 3 }}>Your Rooms Listed</Typography>
       <Grid container spacing={3}>
-        {rooms.filter((room) => room.status === "approved" && room.userId === user.uid).map((room) => (
+        {rooms.filter((room) => room.status === "approved" && room.userId === user.uid)
+        .map((room) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
             <Card sx={{ height: 330 }}>
               {room.imageUrl && <img src={room.imageUrl} alt={room.name} style={{ width: "100%", height: 150, objectFit: "cover" }} />}
@@ -322,6 +373,7 @@ const RentRoom = () => {
                       setRoomToEdit(room);
                       setRoomName(room.name);
                       setPrice(room.price);
+                      setBuilding(room.building);
                       setLocation(room.location);
                       setImageUrl(room.imageUrl);
                       setImageFile(null);
@@ -373,13 +425,71 @@ const RentRoom = () => {
         <DialogTitle>Edit Room</DialogTitle>
         <DialogContent>
           <Stack spacing={2}>
-            <TextField label="Room Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} />
-            <TextField label="Price" fullWidth type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-            <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} />
-            <TextField label="Image URL" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
-            {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover" }} />}
-            <TextField label="Description" fullWidth multiline rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <br></br>
+            <TextField label="Condo Name" fullWidth value={roomName} onChange={(e) => setRoomName(e.target.value)} required />
+                <TextField label="Room Number" fullWidth value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} required />
+              <TextField label="Contract Duration" fullWidth value={contract} onChange={(e) => setContract(e.target.value)} required/>
+              <TextField label="Electric Rate (per unit)" fullWidth value={electric} onChange={(e) => setElectric(e.target.value)} required/>
+              
+              <TextField label="Floor" fullWidth value={floor} onChange={(e) => setFloor(e.target.value)} required/>
+              <TextField label="Building" fullWidth value={building} onChange={(e) => setBuilding(e.target.value)} />
+
+              <TextField label="Google Map URL" fullWidth value={locationMap} onChange={(e) => setLocationMap(e.target.value)} />
+              <TextField
+                label=""
+                select
+                SelectProps={{ native: true }}
+                fullWidth
+                value={roomType}
+                onChange={(e) => setRoomType(e.target.value)}
+              >
+                <option value="">Select Room Type</option>
+                <option value="studio">Studio</option>
+                <option value="standard">Standard</option>
+                <option value="double">Double</option>
+                <option value="villa">Villa</option>
+              </TextField>
+
+              <Box>
+                <Typography variant="subtitle1">Facilities</Typography>
+                {["swimming", "gym", "cleaning", "microwave", "washing machine", "wifi", "refrigerator", "air-con", "office service", "security", "parking", "smoking", "pet friendly", "guest"].map((f) => (
+                  <label key={f} style={{ marginRight: 10 }}>
+                    <input
+                      type="checkbox"
+                      checked={facilities.includes(f)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFacilities([...facilities, f]);
+                        } else {
+                          setFacilities(facilities.filter((item) => item !== f));
+                        }
+                      }}
+                    />
+                    {" " + f}
+                  </label>
+                ))}
+              </Box>
+
+              <TextField label="Taxi Service" select SelectProps={{ native: true }} fullWidth value={taxiService} onChange={(e) => setTaxiService(e.target.value)}>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </TextField>
+
+              <TextField label="Van Service" select SelectProps={{ native: true }} fullWidth value={vanService} onChange={(e) => setVanService(e.target.value)}>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </TextField>
+
+              <TextField label="Deposit Amount" type="number" fullWidth value={deposit} onChange={(e) => setDeposit(e.target.value)} required/>
+
+              
+              <TextField label="Price" type="number" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} required InputProps={{ startAdornment: <AttachMoneyIcon color="action" /> }} />
+              <TextField label="Location" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} required InputProps={{ startAdornment: <LocationOnIcon color="action" /> }} />
+              <TextField label="Image URL (optional if uploading)" fullWidth value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
+              {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover" }} />}
+              <TextField label="Description" multiline rows={3} fullWidth value={description} onChange={(e) => setDescription(e.target.value)} required />
+
           </Stack>
         </DialogContent>
         <DialogActions>
