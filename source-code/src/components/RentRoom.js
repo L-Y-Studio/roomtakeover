@@ -38,7 +38,6 @@ const RentRoom = () => {
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState("");
   const [price, setPrice] = useState("");
-  const [building, setBuilding] = useState("");
   const [location, setLocation] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -59,6 +58,7 @@ const RentRoom = () => {
   const [taxiService, setTaxiService] = useState("no");
   const [vanService, setVanService] = useState("no");
   const [deposit, setDeposit] = useState("");
+  const [building, setBuilding] = useState("");
 
   useEffect(() => {
     const q = query(collection(db, "rooms"));
@@ -160,6 +160,7 @@ const RentRoom = () => {
     } catch (error) {
       console.error("Error adding room:", error);
       alert("Failed to add room.");
+
     }
   };
 
@@ -373,7 +374,7 @@ const RentRoom = () => {
                       setRoomToEdit(room);
                       setRoomName(room.name);
                       setPrice(room.price);
-                      setBuilding(room.building);
+                      
                       setLocation(room.location);
                       setImageUrl(room.imageUrl);
                       setImageFile(null);
@@ -389,7 +390,7 @@ const RentRoom = () => {
                       setTaxiService(room.taxiService || "no");
                       setVanService(room.vanService || "no");
                       setDeposit(room.deposit || "");
-
+                      setBuilding(room.building || "");
                     }}>
                       <EditIcon />
                     </IconButton>
