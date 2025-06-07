@@ -2,22 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { db, auth } from "../firebase"
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore"
+import { collection, query, where, onSnapshot, orderBy, getDocs, updateDoc, doc } from "firebase/firestore"
 import { onAuthStateChanged } from "firebase/auth"
-import {
-  Container,
-  Typography,
-  Box,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-  Divider,
-  Paper,
-  Button,
-  CircularProgress,
-} from "@mui/material"
+import { Container, Typography, Box, List, ListItem, ListItemAvatar, ListItemText, Avatar, Divider, Paper, Button, CircularProgress, Badge,} from "@mui/material"
 import GoogleIcon from "@mui/icons-material/Google"
 import { signInWithGoogle } from "../firebase"
 import Chat from "./Chat"
@@ -25,6 +12,7 @@ import Chat from "./Chat"
 const Messages = () => {
   const [user, setUser] = useState(null)
   const [conversations, setConversations] = useState([])
+  const [unreadCounts, setUnreadCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedConversation, setSelectedConversation] = useState(null)
 
@@ -53,13 +41,37 @@ const Messages = () => {
         ...doc.data(),
       }))
       setConversations(conversationData)
+
+      // For each conversation, get the unread message count
+      conversationData.forEach((conversation) => {
+        fetchUnreadCount(conversation.id, userId)
+      })
+
       setLoading(false)
     })
 
     return () => unsubscribe()
   }
 
-  const handleSelectConversation = (conversation) => {
+  const fetchUnreadCount = (conversationId, userId) => {
+    const q = query(
+      collection(db, "messages"),
+      where("conversationId", "==", conversationId),
+      where("recipientId", "==", userId),
+      where("read", "==", false),
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [conversationId]: snapshot.docs.length,
+      }))
+    })
+
+    return unsubscribe
+  }
+
+  const handleSelectConversation = async (conversation) => {
     // Find the other participant (not the current user)
     const otherParticipantId = conversation.participants.find((id) => id !== user.uid)
 
@@ -68,6 +80,30 @@ const Messages = () => {
       recipientId: otherParticipantId,
       recipientName: conversation.participantNames[otherParticipantId],
     })
+
+    // Mark messages in this conversation as read
+    await markConversationAsRead(conversation.id)
+  }
+
+  const markConversationAsRead = async (conversationId) => {
+    if (!user) return
+
+    // Get all unread messages for this conversation
+    const q = query(
+      collection(db, "messages"),
+      where("conversationId", "==", conversationId),
+      where("recipientId", "==", user.uid),
+      where("read", "==", false),
+    )
+
+    const querySnapshot = await getDocs(q)
+
+    // Mark each message as read
+    for (const docSnapshot of querySnapshot.docs) {
+      await updateDoc(doc(db, "messages", docSnapshot.id), {
+        read: true,
+      })
+    }
   }
 
   if (!user) {
@@ -128,6 +164,8 @@ const Messages = () => {
               // Find the other participant (not the current user)
               const otherParticipantId = conversation.participants.find((id) => id !== user.uid)
               const otherParticipantName = conversation.participantNames[otherParticipantId]
+              const unreadCount = unreadCounts[conversation.id] || 0
+              const hasUnread = unreadCount > 0
 
               return (
                 <Box key={conversation.id}>
@@ -138,18 +176,33 @@ const Messages = () => {
                     sx={{
                       transition: "background-color 0.2s",
                       "&:hover": { bgcolor: "rgba(0, 0, 0, 0.04)" },
+                      bgcolor: hasUnread ? "rgba(25, 118, 210, 0.08)" : "transparent",
                     }}
                   >
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: "primary.main" }}>
-                        {otherParticipantName?.[0]?.toUpperCase() || "U"}
-                      </Avatar>
+                      <Badge badgeContent={unreadCount} color="error" invisible={!hasUnread} overlap="circular">
+                        <Avatar sx={{ bgcolor: "primary.main" }}>
+                          {otherParticipantName?.[0]?.toUpperCase() || "U"}
+                        </Avatar>
+                      </Badge>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={otherParticipantName}
+                      primary={
+                        <Typography component="span" variant="body1" sx={{ fontWeight: hasUnread ? 600 : 400 }}>
+                          {otherParticipantName}
+                        </Typography>
+                      }
                       secondary={
                         <>
-                          <Typography component="span" variant="body2" color="text.primary" sx={{ display: "inline" }}>
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="text.primary"
+                            sx={{
+                              display: "inline",
+                              fontWeight: hasUnread ? 500 : 400,
+                            }}
+                          >
                             {conversation.lastMessage?.substring(0, 50)}
                             {conversation.lastMessage?.length > 50 ? "..." : ""}
                           </Typography>
