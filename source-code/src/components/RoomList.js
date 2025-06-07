@@ -24,11 +24,9 @@ import {
   Chip,
   Stack,
   IconButton,
-  Tooltip,
 } from "@mui/material";
 import MessageIcon from "@mui/icons-material/Message";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import SortIcon from "@mui/icons-material/Sort";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import { getOrCreateConversation } from "../utils/chatUtils";
@@ -52,7 +50,6 @@ const RoomList = () => {
   const [sortBy, setSortBy] = useState("default");
   const [facilities, setFacilities] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
-  const navigate = useNavigate();
   const { openFloatingChat } = useFloatingChat();
 
   const roomTypes = ["studio", "standard", "double", "villa"];
@@ -368,7 +365,7 @@ const RoomList = () => {
                 >
                   {room.location}
                 </Typography>
-
+              <Box sx={{ display: 'flex',justifyContent: 'space-between',alignItems: 'center',mt: 2}}>
                 <Typography
                   variant="caption"
                   color="text.secondary"
@@ -376,19 +373,12 @@ const RoomList = () => {
                 >
                   Posted by {room.adminName || "Unknown"}
                 </Typography>
-              </CardContent>
-
-              <Box sx={{ p: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<MessageIcon />}
-                  onClick={() => handleMessageClick(room)}
-                  fullWidth
-                >
-                  Message
-                </Button>
+               
+                <IconButton onClick={(e) => {handleMessageClick(room);}} >
+                  <MessageIcon fontSize="small" />
+                </IconButton>
               </Box>
+              </CardContent>
             </Card>
           </Link>
         ))}
