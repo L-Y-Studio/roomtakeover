@@ -188,6 +188,7 @@ const RentRoom = () => {
         taxiService,
         vanService,
         deposit: parseFloat(deposit),
+        status: "pending",
         building,
       });
       setEditDialogOpen(false);
