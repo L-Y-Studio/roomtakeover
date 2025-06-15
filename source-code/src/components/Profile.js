@@ -20,10 +20,12 @@ import {
   Grid,
   Container
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import { supabase } from "../utils/supabaseClient";
 import GoogleIcon from "@mui/icons-material/Google";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useFloatingChat } from "../contexts/FloatingChatContext";
-
+ 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [rooms, setRooms] = useState([]);
