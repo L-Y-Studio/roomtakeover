@@ -69,7 +69,8 @@ const SetupProfile = () => {
         <Stack spacing={3}>
           <TextField label="Phone Number" fullWidth required value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
           <TextField label="Line ID" fullWidth required value={lineId} onChange={(e) => setLineId(e.target.value)} />
-          <TextField label="Messenger Name" fullWidth required value={messengerName} onChange={(e) => setMessengerName(e.target.value)} />
+          <TextField label="Messenger Link" fullWidth required value={messengerName} onChange={(e) => setMessengerName(e.target.value)} />
+            <p>Upload profile picture *</p>
           <input type="file" accept="image/*" onChange={(e) => setProfilePic(e.target.files[0])} />
           <Button type="submit" variant="contained" disabled={loading}>
             {loading ? "Saving..." : "Save Profile"}

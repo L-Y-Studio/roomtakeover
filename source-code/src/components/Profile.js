@@ -132,7 +132,7 @@ const Profile = () => {
             <>
               <Typography>📞 {userData.phoneNumber}</Typography>
               <Typography>💬 Line: {userData.lineId}</Typography>
-              <Typography>📘 Messenger: {userData.messengerName}</Typography>
+              <Typography>📘 Facebook Link: {userData.messengerName}</Typography>
             </>
           )}
           <Box sx={{ mt: 2 }}>
@@ -267,11 +267,12 @@ const Profile = () => {
               onChange={(e) => setForm({ ...form, lineId: e.target.value })}
             />
             <TextField
-              label="Messenger Name"
+              label="Facebook Link"
               fullWidth
               value={form.messengerName}
               onChange={(e) => setForm({ ...form, messengerName: e.target.value })}
             />
+            <p>Upload profile picture</p>
             <input
               type="file"
               accept="image/*"
