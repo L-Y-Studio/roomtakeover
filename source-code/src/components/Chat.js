@@ -13,7 +13,7 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore"
-import { Typography, TextField, Button, Box, Avatar, Divider, CircularProgress } from "@mui/material"
+import { Typography, TextField, Button, Box, Avatar, Divider, CircularProgress, Paper } from "@mui/material"
 import SendIcon from "@mui/icons-material/Send"
 
 const Chat = ({ conversationId, recipientId, recipientName, isFloating = false }) => {
@@ -21,6 +21,7 @@ const Chat = ({ conversationId, recipientId, recipientName, isFloating = false }
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
   const messagesEndRef = useRef(null)
+  const chatContainerRef = useRef(null)
   const currentUser = auth.currentUser
 
   useEffect(() => {
@@ -67,6 +68,16 @@ const Chat = ({ conversationId, recipientId, recipientName, isFloating = false }
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // Scroll to bottom when component mounts
+  useEffect(() => {
+    scrollToBottom()
+  }, [])
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
@@ -139,8 +150,18 @@ const Chat = ({ conversationId, recipientId, recipientName, isFloating = false }
       }
 
   return (
-    <Box sx={containerStyles}>
-      <Box sx={messageContainerStyles}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        bgcolor: "background.default",
+      }}
+    >
+      <Box
+        ref={chatContainerRef}
+        sx={messageContainerStyles}
+      >
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
             <CircularProgress size={24} />
@@ -158,44 +179,25 @@ const Chat = ({ conversationId, recipientId, recipientName, isFloating = false }
                   mb: 1,
                 }}
               >
-                <Box sx={{ display: "flex", maxWidth: "70%" }}>
-                  {!isCurrentUser && (
-                    <Avatar
-                      sx={{
-                        bgcolor: "primary.main",
-                        width: 28,
-                        height: 28,
-                        mr: 1,
-                        mt: 0.5,
-                        fontSize: "0.8rem",
-                      }}
-                    >
-                      {message.senderName?.[0]?.toUpperCase() || "U"}
-                    </Avatar>
-                  )}
-
-                  <Box>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        bgcolor: isCurrentUser ? "primary.main" : "white",
-                        color: isCurrentUser ? "white" : "text.primary",
-                      }}
-                    >
-                      <Typography variant="body2">{message.text}</Typography>
-                    </Box>
-
-                    <Typography variant="caption" sx={{ ml: 1, color: "text.secondary" }}>
-                      {message.timestamp
-                        ? new Date(message.timestamp.toDate()).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "Sending..."}
-                    </Typography>
-                  </Box>
-                </Box>
+                <Paper
+                  sx={{
+                    p: 1.5,
+                    maxWidth: "70%",
+                    bgcolor: isCurrentUser ? "primary.main" : "grey.100",
+                    color: isCurrentUser ? "white" : "text.primary",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="body1">{message.text}</Typography>
+                  <Typography variant="caption" color={isCurrentUser ? "inherit" : "text.secondary"}>
+                    {message.timestamp
+                      ? new Date(message.timestamp.toDate()).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "Sending..."}
+                  </Typography>
+                </Paper>
               </Box>
             )
           })

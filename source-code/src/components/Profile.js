@@ -16,10 +16,13 @@ import {
   Button,
   Card,
   CardContent,
-  Typography
+  Typography,
+  Grid,
+  Container
 } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { useFloatingChat } from "../contexts/FloatingChatContext";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -30,7 +33,7 @@ const Profile = () => {
       setUser(currentUser);
       if (currentUser) {
         const unsubscribeRooms = fetchUserRooms(currentUser.uid);
-        return () => unsubscribeRooms(); // properly cleanup Firestore listener
+        return () => unsubscribeRooms(); 
       }
     });
 
@@ -46,7 +49,7 @@ const Profile = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 900, mx: "auto", mt: 4, px: 2 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {user ? (
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Avatar
@@ -101,38 +104,56 @@ const Profile = () => {
           </Typography>
 
           {rooms.length > 0 ? (
-            <Box
+            <Grid
+              container
+              spacing={3}
               sx={{
-                display: "flex",
-                flexWrap: "wrap",
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, 1fr)",
+                  md: "repeat(3, 1fr)",
+                },
                 gap: 3,
-                justifyContent: "center"
               }}
             >
               {rooms.map((room) => (
                 <Card
                   key={room.id}
                   sx={{
-                    width: 270,
-                    height: 270,
+                    width: "100%",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
                     backgroundColor: "background.default",
                     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                     transition: "all 0.3s ease",
-                    '&:hover': {
+                    "&:hover": {
                       boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                      transform: "translateY(-4px)"
-                    }
+                      transform: "translateY(-4px)",
+                    },
+                    overflow: "hidden",
                   }}
                 >
-                  <CardContent>
+                  {room.imageUrl && (
+                    <Box
+                      component="img"
+                      src={room.imageUrl}
+                      alt={room.name}
+                      sx={{
+                        width: "100%",
+                        height: 150,
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+
+                  <CardContent sx={{ p: 2, flexGrow: 1 }}>
                     <Typography
                       variant="h6"
-                      color="primary"
-                      sx={{ fontWeight: 550, mb: 2 }}
                       gutterBottom
+                      color="primary"
+                      sx={{ fontWeight: 600 }}
                     >
                       {room.name}
                     </Typography>
@@ -145,22 +166,26 @@ const Profile = () => {
                       variant="body2"
                       color="text.secondary"
                       sx={{
+                        mb: 2,
                         whiteSpace: "normal",
                         wordBreak: "break-word",
                         lineHeight: 1.5,
-                        mb: 1
                       }}
                     >
                       {room.location}
                     </Typography>
 
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontStyle: "italic" }}
+                    >
                       Status: {room.status}
                     </Typography>
                   </CardContent>
                 </Card>
               ))}
-            </Box>
+            </Grid>
           ) : (
             <Typography
               variant="body1"
@@ -171,10 +196,9 @@ const Profile = () => {
               No rooms posted yet.
             </Typography>
           )}
-          <br></br>
         </Box>
       )}
-    </Box>
+    </Container>
   );
 };
 
