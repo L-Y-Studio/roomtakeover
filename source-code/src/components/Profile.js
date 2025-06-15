@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { db, auth, signInWithGoogle } from "../firebase";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot
-} from "firebase/firestore";
-import {
-  onAuthStateChanged,
-  signOut
-} from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   Avatar,
   Box,
@@ -17,6 +10,7 @@ import {
   Card,
   CardContent,
   Typography,
+
   Grid,
   Container
 } from "@mui/material";
@@ -24,20 +18,39 @@ import GoogleIcon from "@mui/icons-material/Google";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useFloatingChat } from "../contexts/FloatingChatContext";
 
+ 
+
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [userData, setUserData] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    phoneNumber: "",
+    lineId: "",
+    messengerName: "",
+    profilePictureUrl: "",
+  });
+  const [newImageFile, setNewImageFile] = useState(null);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        const docRef = doc(db, "users", currentUser.uid);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          setUserData(snap.data());
+        }
+
         const unsubscribeRooms = fetchUserRooms(currentUser.uid);
+
         return () => unsubscribeRooms(); 
+
       }
     });
-
-    return () => unsubscribeAuth(); 
+    return () => unsubscribeAuth();
   }, []);
 
   const fetchUserRooms = (userId) => {
@@ -48,38 +61,99 @@ const Profile = () => {
     return unsubscribeRooms;
   };
 
+  const handleEditOpen = () => {
+    setForm({
+      name: userData?.name || "",
+      phoneNumber: userData?.phoneNumber || "",
+      lineId: userData?.lineId || "",
+      messengerName: userData?.messengerName || "",
+      profilePictureUrl: userData?.profilePictureUrl || "",
+    });
+    setNewImageFile(null);
+    setEditOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      let profilePictureUrl = form.profilePictureUrl;
+
+      if (newImageFile) {
+        const fileExt = newImageFile.name.split(".").pop();
+        const filePath = `profile-pictures/${user.uid}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("profile-pictures")
+          .upload(filePath, newImageFile, { upsert: true });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          return alert("Failed to upload image");
+        }
+
+        const { data } = supabase.storage
+          .from("profile-pictures")
+          .getPublicUrl(filePath);
+        profilePictureUrl = data.publicUrl;
+      }
+
+      await updateDoc(doc(db, "users", user.uid), {
+        name: form.name,
+        phoneNumber: form.phoneNumber,
+        lineId: form.lineId,
+        messengerName: form.messengerName,
+        profilePictureUrl,
+        lastActive: new Date(),
+      });
+
+      setUserData({
+        ...form,
+        profilePictureUrl,
+      });
+      setEditOpen(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert("Error saving profile.");
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {user ? (
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Avatar
-            sx={{
-              width: 100,
-              height: 100,
-              mx: "auto",
-              mb: 2,
-              color: "secondary.main",
-              fontSize: 40,
-              fontWeight: "bold",
-              bgcolor: "primary.main"
-            }}
+            src={userData?.profilePictureUrl || ""}
+            sx={{ width: 100, height: 100, mx: "auto", mb: 2 }}
           >
-            {user.displayName?.[0]?.toUpperCase() ||
-              user.email?.[0]?.toUpperCase() ||
-              "U"}
+            {userData?.name?.[0]?.toUpperCase() || "U"}
           </Avatar>
-          <Typography variant="h5" gutterBottom>
-            {user.displayName}
-          </Typography>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<LogoutIcon />}
-            onClick={() => signOut(auth)}
-            sx={{ mt: 2 }}
-          >
-            Sign Out
-          </Button>
+          <Typography variant="h5">{userData?.name || user.displayName}</Typography>
+          <Typography variant="body2">{user.email}</Typography>
+          {userData && (
+            <>
+              <Typography>📞 {userData.phoneNumber}</Typography>
+              <Typography>💬 Line: {userData.lineId}</Typography>
+              <Typography>📘 Messenger: {userData.messengerName}</Typography>
+            </>
+          )}
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleEditOpen}
+              startIcon={<EditIcon />}
+              sx={{ mr: 2 }}
+            >
+              Edit Profile
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<LogoutIcon />}
+              onClick={() => signOut(auth)}
+            >
+              Sign Out
+            </Button>
+          </Box>
         </Box>
       ) : (
         <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -97,12 +171,12 @@ const Profile = () => {
         </Box>
       )}
 
+      {/* Room Cards */}
       {user && (
         <Box>
           <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
             Your Posted Rooms
           </Typography>
-
           {rooms.length > 0 ? (
             <Grid
               container
@@ -115,6 +189,7 @@ const Profile = () => {
                   md: "repeat(3, 1fr)",
                 },
                 gap: 3,
+
               }}
             >
               {rooms.map((room) => (
@@ -157,11 +232,9 @@ const Profile = () => {
                     >
                       {room.name}
                     </Typography>
-
                     <Typography variant="body1" sx={{ mb: 1 }}>
                       ${room.price}/month
                     </Typography>
-
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -175,11 +248,13 @@ const Profile = () => {
                       {room.location}
                     </Typography>
 
+
                     <Typography
                       variant="caption"
                       color="text.secondary"
                       sx={{ fontStyle: "italic" }}
                     >
+
                       Status: {room.status}
                     </Typography>
                   </CardContent>
@@ -187,18 +262,19 @@ const Profile = () => {
               ))}
             </Grid>
           ) : (
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              align="center"
-              sx={{ mt: 2 }}
-            >
+            <Typography align="center" sx={{ mt: 2 }}>
               No rooms posted yet.
             </Typography>
           )}
         </Box>
       )}
+
     </Container>
+
+
+ 
+    </Box>
+
   );
 };
 

@@ -1,13 +1,19 @@
-// src/pages/RoomDetail.js
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { Container, Typography, Box } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Box,
+  Button,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const RoomDetail = () => {
   const { id } = useParams();
   const [room, setRoom] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -25,19 +31,27 @@ const RoomDetail = () => {
 
   return (
     <Container sx={{ py: 4 }}>
+      <Button
+        variant="outlined"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate(-1)} // Goes back to the previous page
+        sx={{ mb: 3 }}
+      >
+        Back
+      </Button>
+
       <Typography variant="h4" gutterBottom>{room.name}</Typography>
       {room.imageUrl && (
         <img
-  src={room.imageUrl}
-  alt={room.name}
-  style={{
-    width: "100%",
-    height: "400px",
-    objectFit: "cover",
-    borderRadius: "8px"
-  }}
-/>
-
+          src={room.imageUrl}
+          alt={room.name}
+          style={{
+            width: "100%",
+            height: "400px",
+            objectFit: "cover",
+            borderRadius: "8px"
+          }}
+        />
       )}
       <Box mt={2}>
         <Typography><strong>Price:</strong> ฿{room.price} / month</Typography>
