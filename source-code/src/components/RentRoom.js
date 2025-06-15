@@ -38,6 +38,7 @@ const RentRoom = () => {
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState("");
   const [price, setPrice] = useState("");
+  const [building, setBuilding] = useState("");
   const [location, setLocation] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -58,7 +59,6 @@ const RentRoom = () => {
   const [taxiService, setTaxiService] = useState("no");
   const [vanService, setVanService] = useState("no");
   const [deposit, setDeposit] = useState("");
-  const [building, setBuilding] = useState("");
 
   useEffect(() => {
     const q = query(collection(db, "rooms"));
@@ -160,7 +160,6 @@ const RentRoom = () => {
     } catch (error) {
       console.error("Error adding room:", error);
       alert("Failed to add room.");
-
     }
   };
 
@@ -347,35 +346,134 @@ const RentRoom = () => {
       </Box>
 
       <Typography variant="h6" gutterBottom>Your Pending Rooms</Typography>
-      <Grid container spacing={3}>
+      <Grid
+        container
+        spacing={3}
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+          },
+          gap: 3,
+          mb: 4
+        }}
+      >
         {rooms.filter((room) => room.userId === user.uid && room.status === "pending").map((room) => (
-          <Grid item xs={12} sm={6} md={4} key={room.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">{room.name}</Typography>
-                <Typography color="warning.main">Status: Pending</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          <Card
+            key={room.id}
+            sx={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              backgroundColor: "background.default",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                transform: "translateY(-4px)",
+              },
+              overflow: "hidden",
+            }}
+          >
+            {room.imageUrl && (
+              <Box
+                component="img"
+                src={room.imageUrl}
+                alt={room.name}
+                sx={{
+                  width: "100%",
+                  height: 150,
+                  objectFit: "cover",
+                }}
+              />
+            )}
+            <CardContent sx={{ p: 2, flexGrow: 1 }}>
+              <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 600 }}>
+                {room.name}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                ฿{room.price}/month
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: 2,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  lineHeight: 1.5,
+                }}
+              >
+                {room.location}
+              </Typography>
+              <Typography variant="caption" color="warning.main" sx={{ fontStyle: "italic" }}>
+                Status: Pending
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
       </Grid>
 
-      <Typography variant="h5" sx={{ mt: 5, mb: 3 }}>Your Rooms Listed</Typography>
-      <Grid container spacing={3}>
-        {rooms.filter((room) => room.status === "approved" && room.userId === user.uid)
-        .map((room) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
-            <Card sx={{ height: 330 }}>
-              {room.imageUrl && <img src={room.imageUrl} alt={room.name} style={{ width: "100%", height: 150, objectFit: "cover" }} />}
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="h6" color="primary">{room.name}</Typography>
-                  <Box>
-                    <IconButton color="primary" onClick={() => {
+      <Typography variant="h5" sx={{ mb: 3 }}>Your Rooms Listed</Typography>
+      <Grid
+        container
+        spacing={3}
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+          },
+          gap: 3,
+        }}
+      >
+        {rooms.filter((room) => room.status === "approved" && room.userId === user.uid).map((room) => (
+          <Card
+            key={room.id}
+            sx={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              backgroundColor: "background.default",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                transform: "translateY(-4px)",
+              },
+              overflow: "hidden",
+            }}
+          >
+            {room.imageUrl && (
+              <Box
+                component="img"
+                src={room.imageUrl}
+                alt={room.name}
+                sx={{
+                  width: "100%",
+                  height: 150,
+                  objectFit: "cover",
+                }}
+              />
+            )}
+            <CardContent sx={{ p: 2, flexGrow: 1 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                  {room.name}
+                </Typography>
+                <Box>
+                  <IconButton
+                    color="primary"
+                    onClick={() => {
                       setRoomToEdit(room);
                       setRoomName(room.name);
                       setPrice(room.price);
-                      
+                      setBuilding(room.building);
                       setLocation(room.location);
                       setImageUrl(room.imageUrl);
                       setImageFile(null);
@@ -391,24 +489,41 @@ const RentRoom = () => {
                       setTaxiService(room.taxiService || "no");
                       setVanService(room.vanService || "no");
                       setDeposit(room.deposit || "");
-                      setBuilding(room.building || "");
-                    }}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => {
+                    }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    color="error"
+                    onClick={() => {
                       setSelectedRoom(room);
                       setDeleteDialogOpen(true);
-                    }}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                 </Box>
-                <Typography>฿{room.price}/month</Typography>
-                <Typography variant="body2" color="text.secondary">{room.location}</Typography>
-                <Typography variant="caption" sx={{ mt: 2, display: "block" }}>Posted by {room.adminName || "Unknown"}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+              </Box>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                ฿{room.price}/month
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: 2,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  lineHeight: 1.5,
+                }}
+              >
+                {room.location}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                Posted by {room.adminName || "Unknown"}
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
       </Grid>
 

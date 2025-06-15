@@ -10,17 +10,15 @@ import {
   Card,
   CardContent,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Stack
+
+  Grid,
+  Container
 } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import LogoutIcon from "@mui/icons-material/Logout";
-import EditIcon from "@mui/icons-material/Edit";
-import { supabase } from "../utils/supabaseClient";
+import { useFloatingChat } from "../contexts/FloatingChatContext";
+
+ 
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -47,7 +45,9 @@ const Profile = () => {
         }
 
         const unsubscribeRooms = fetchUserRooms(currentUser.uid);
-        return () => unsubscribeRooms();
+
+        return () => unsubscribeRooms(); 
+
       }
     });
     return () => unsubscribeAuth();
@@ -117,7 +117,7 @@ const Profile = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 900, mx: "auto", mt: 4, px: 2 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {user ? (
         <Box sx={{ textAlign: "center", mb: 4 }}>
           <Avatar
@@ -178,38 +178,57 @@ const Profile = () => {
             Your Posted Rooms
           </Typography>
           {rooms.length > 0 ? (
-            <Box
+            <Grid
+              container
+              spacing={3}
               sx={{
-                display: "flex",
-                flexWrap: "wrap",
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, 1fr)",
+                  md: "repeat(3, 1fr)",
+                },
                 gap: 3,
-                justifyContent: "center",
+
               }}
             >
               {rooms.map((room) => (
                 <Card
                   key={room.id}
                   sx={{
-                    width: 270,
-                    height: 270,
+                    width: "100%",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
                     backgroundColor: "background.default",
                     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                     transition: "all 0.3s ease",
-                    '&:hover': {
+                    "&:hover": {
                       boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                      transform: "translateY(-4px)"
-                    }
+                      transform: "translateY(-4px)",
+                    },
+                    overflow: "hidden",
                   }}
                 >
-                  <CardContent>
+                  {room.imageUrl && (
+                    <Box
+                      component="img"
+                      src={room.imageUrl}
+                      alt={room.name}
+                      sx={{
+                        width: "100%",
+                        height: 150,
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+
+                  <CardContent sx={{ p: 2, flexGrow: 1 }}>
                     <Typography
                       variant="h6"
-                      color="primary"
-                      sx={{ fontWeight: 550, mb: 2 }}
                       gutterBottom
+                      color="primary"
+                      sx={{ fontWeight: 600 }}
                     >
                       {room.name}
                     </Typography>
@@ -220,21 +239,28 @@ const Profile = () => {
                       variant="body2"
                       color="text.secondary"
                       sx={{
+                        mb: 2,
                         whiteSpace: "normal",
                         wordBreak: "break-word",
                         lineHeight: 1.5,
-                        mb: 1
                       }}
                     >
                       {room.location}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+
+
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontStyle: "italic" }}
+                    >
+
                       Status: {room.status}
                     </Typography>
                   </CardContent>
                 </Card>
               ))}
-            </Box>
+            </Grid>
           ) : (
             <Typography align="center" sx={{ mt: 2 }}>
               No rooms posted yet.
@@ -243,48 +269,12 @@ const Profile = () => {
         </Box>
       )}
 
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Your Profile</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} mt={1}>
-            <TextField
-              label="Name"
-              fullWidth
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-            <TextField
-              label="Phone Number"
-              fullWidth
-              value={form.phoneNumber}
-              onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
-            />
-            <TextField
-              label="Line ID"
-              fullWidth
-              value={form.lineId}
-              onChange={(e) => setForm({ ...form, lineId: e.target.value })}
-            />
-            <TextField
-              label="Messenger Name"
-              fullWidth
-              value={form.messengerName}
-              onChange={(e) => setForm({ ...form, messengerName: e.target.value })}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setNewImageFile(e.target.files[0])}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveProfile}>Save</Button>
-        </DialogActions>
-      </Dialog>
+    </Container>
+
+
+ 
     </Box>
+
   );
 };
 
